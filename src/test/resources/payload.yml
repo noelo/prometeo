@@ -1,0 +1,14 @@
+---
+- command:
+    repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
+    tag: ""
+    verbosity: "vvv"
+    callbackUri: "https://myapp/callme/"
+    project: "PO123"
+- vars:
+    test_url: "http://repo1.maven.org/maven2/io/swagger/swagger-core/1.5.9/swagger-core-1.5.9.pom"
+    test_dictionary:
+        name: "Martin"
+        job: "Elite Developer"
+        skill: "Elite"
+...
