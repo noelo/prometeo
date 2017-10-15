@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: "prometeo-runner:1"
+    image: "prometeo:0.10"
     environment:
      - HTTP_PORT=8080
      - LOG_DB_HOST=log

@@ -8,8 +8,8 @@ mkdir build
 
 # clones and builds the prometeo jar file
 cd build
-git clone https://github.com/prometeo-cloud/prometeo-runner.git
-cd prometeo-runner
+git clone https://github.com/prometeo-cloud/prometeo.git
+cd prometeo
 mvn package
 cd ../../
 
@@ -24,8 +24,8 @@ if [[ "$(docker images -q jre:8 2> /dev/null)" == "" ]]; then
   cd ../../
 fi
 
-cd prometeo-docker/prometeo-runner
-cp ../../prometeo-runner/target/prometeo*.jar .
+cd prometeo-docker/prometeo
+cp ../../prometeo/target/prometeo*.jar .
 sh build.sh
 cd ../../../
 
