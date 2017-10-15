@@ -15,12 +15,12 @@ The easiest way to get Prometeo up and running is to use docker-compose to get t
 In order to build the required Docker images the [docker-build.sh](https://github.com/prometeo-cloud/prometeo/blob/master/docker-build.sh) script can be executed as follows:
 
 ```bash
-$ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-build.sh && sh docker-build.sh
+$ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-build.sh -O docker-build.sh && sh docker-build.sh
 ```
 [Docker Compose](https://docs.docker.com/compose/) needs to be installed so that the following command can be run:
 
 ```bash
-$ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-compose.yml && docker-compose up
+$ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-compose.yml -O docker-compose.yml && docker-compose up
 ```
 To test the Web API is running click on the following link: [Web API](http://localhost:8080).
 
