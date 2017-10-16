@@ -1,13 +1,17 @@
 package org.gatblau.prometeo;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.ServerAddress;
+import com.mongodb.*;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.mongodb.client.model.Filters.eq;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
@@ -15,10 +19,12 @@ public class Log {
     private MongoClient _mongo;
     private MongoDatabase _db;
     private boolean _connected = false;
+    private MongoCollection<Event> _events;
 
     public Log(String dbName, String host, String port) {
         try {
             _db = getDb(dbName, host, Integer.parseInt(port));
+            _events = _db.getCollection("events", Event.class);
             _connected = true;
         }
         catch (Exception ex) {
@@ -39,11 +45,20 @@ public class Log {
     public void insertEvent(Event event){
         String insertFailed = String.format("Connection to Log database failed: '%s'. Could not insert '%s' event.", "%s", event.getEventType().toString());
         try {
-            MongoCollection<Event> collection = _db.getCollection("events", Event.class);
-            collection.insertOne(event);
+            _events.insertOne(event);
         }
         catch (Exception ex){
             System.out.println(String.format(insertFailed, ex.getMessage()));
         }
+    }
+
+    public List<Event> get(String processId) {
+        List<Event> events = new ArrayList<>();
+        try (MongoCursor<Event> cursor = _events.find(eq("processId", processId)).iterator()) {
+            while (cursor.hasNext()) {
+                events.add(cursor.next());
+            }
+        }
+        return events;
     }
 }

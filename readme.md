@@ -29,7 +29,7 @@ To test the Web API is running click on the following link: [Web API](http://loc
 To test the control node, a payload needs to be posted to the Web API to the **/run** URL. An application such as [Postman](https://www.getpostman.com/) can be used to post the payload.
 
 The parameters for the request are:
-- **URI**: /run
+- **URI**: http://localhost:8080/run
 - **Method**: POST
 - **Content-Type header**: "application/x-yaml"
 - **Body format**: RAW (with content as per the example below)
@@ -73,6 +73,21 @@ The **command** element contains information used by Prometeo to retrieve and ex
 The **vars** element contains all the configuration variables required by the executing Ansible playbook.
 
 The format for this section is basically a list of variables in YAML format. The variables in this section are the ones required by the scripts in the repoUri to run.
+
+## Querying process status
+
+In order to find the log entries associated with a particular process, execute the following query passing the identifier of the process (processId) retrieved when the execution was requested:
+
+- **URI**: http://localhost:8080/logs/{processId}
+- **Method**: GET
+- **Accept header**: "application/x-yaml" or "application/json"
+
+## Web API documentation
+
+Prometeo uses Swagger to document its web API.
+
+To access the Swagger UI try the following link http://localhost:8080/swagger-ui.html
+
 
 ## Ansible Project format
 

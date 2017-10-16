@@ -1,6 +1,8 @@
 package features;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -13,7 +15,7 @@ import java.util.Scanner;
 
 @Component
 public class Util {
-    private Map<String, Object> cache = new HashMap<>();
+    private Map<Vars, Object> cache = new HashMap<>();
 
     public Util(){
     }
@@ -39,11 +41,11 @@ public class Util {
         }
     }
 
-    public void put(String key, Object value) {
+    public void put(Vars key, Object value) {
         cache.put(key, value);
     }
 
-    public <T> T get(String key) {
+    public <T> T get(Vars key) {
         T value = (T) cache.get(key);
         if (value == null) {
             throw new RuntimeException(
@@ -110,5 +112,19 @@ public class Util {
                 }
             }
         }
+    }
+
+    public HttpEntity<String> getEntity(String payload) {
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add("Content-Type", "application/x-yaml");
+        requestHeaders.add("Accept", "application/x-yaml");
+        if (payload != null) {
+            return new HttpEntity<String>(payload, requestHeaders);
+        }
+        return new HttpEntity<String>(requestHeaders);
+    }
+
+    public HttpEntity<String> getEntity() {
+        return getEntity(null);
     }
 }

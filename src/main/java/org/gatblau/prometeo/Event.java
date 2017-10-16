@@ -11,7 +11,6 @@ public class Event {
     private String _date;
     private String _eventType;
     private String _info;
-    private String _source;
     private String _command;
 
     public Event() {
@@ -28,16 +27,11 @@ public class Event {
         _date = getCurrentTime();
         _eventType = eventType.name();
         _info = info;
-        _source = "RUNNER";
         _command = command;
     }
 
     public String getEventId() {
         return _eventId;
-    }
-
-    public String getSource() {
-        return _source;
     }
 
     public String getProjectCode() {
@@ -46,10 +40,6 @@ public class Event {
 
     public void setProjectCode(String value) {
         _projectCode = value;
-    }
-
-    public void setSource(String source){
-        _source = source;
     }
 
     public void setEventId(String eventId) {

@@ -5,6 +5,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class LogManager {
     private Log thisLog;
@@ -62,5 +65,23 @@ public class LogManager {
         catch (Exception ex) {
             insert(new Event(data.getProcessId(), data.getProject(), EventType.ERROR, ex.getMessage()));
         }
+    }
+
+    public List<Event> getLogs(String processId) {
+        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
+        if (thisLog != null) {
+            return thisLog.get(processId);
+        }
+        else {
+            Log newLog = new Log(_dbName, _dbHost, _dbPort);
+            if (newLog.connected()){
+                thisLog = newLog;
+                return thisLog.get(processId);
+            }
+            else {
+                System.out.println(String.format(queryFailed, "Connection timeout."));
+            }
+        }
+        return new ArrayList<>();
     }
 }
