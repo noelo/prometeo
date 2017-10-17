@@ -8,7 +8,7 @@ It exposes a Web API accepting a YAML payload and logs the execution steps and e
 
 <img src="doc/prometeo.png"/>
 
-## Getting Started
+## Getting Started using build scripts
 
 The easiest way to get Prometeo up and running is to use docker-compose to get the Prometeo web API and the Log containers running.
 
@@ -23,6 +23,23 @@ $ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-b
 $ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-compose.yml -O docker-compose.yml && docker-compose up
 ```
 To test the Web API is running click on the following link: [Web API](http://localhost:8080).
+
+## Getting Started using Europa
+
+If you have windows on your PC, the easiest way to get started is to follow the steps below:
+- Install VirtualBox on laptop
+- Download Europa from [here](https://github.com/gatblau/europa/releases), unzip and import the “ova” file into VirtualBox (File -> Import Appliance)
+- Start Europa in VirtualBox and login – details on GitHub
+- Run IntelliJ and create a new project from GitHub using the Prometeo repo
+- Install Postman and [Robomongo 1.0](https://download.robomongo.org/1.0.0/linux/robomongo-1.0.0-linux-x86_64-89f24ea.tar.gz) on Europa (Robo 3T 1.1 is not yet supported on CentOS 7)
+- In IntelliJ settings, install the following plugins:
+  - Docker Integration
+  - Bash Support
+  -	Robomongo
+- Restart IntelliJ to use plugins
+- In IntelliJ use terminal window to build and then run Prometeo
+- Use Postman to test the control node
+- Use IntelliJ Robomongo plugin to connect to database and inspect events
 
 ## Testing the control node
 
