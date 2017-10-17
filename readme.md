@@ -73,7 +73,7 @@ The **command** element contains information used by Prometeo to retrieve and ex
 | repoUri  | The URI of the git repository containing the Ansible scripts to run.  | yes  |  
 | tag  | The tag in the git repository to use or empty if the master is used.  | no  |   
 | verbosity  | The level of verbosity of the Ansible execution output that is recorded in the Log database. The verbosity can be v, vv, vvv or vvvv. The default value is v. | no  |   
-| callbackUri  | The URI Prometeo will call back when the process complete.  | no  |  
+| callbackUri  | The URI Prometeo will call back when the process complete. No callback is performed if this value is not provided. | no  |  
 | project  | The unique reference identifying the project associated with the request. | yes  |    
 
 The **vars** element contains all the configuration variables required by the executing Ansible playbook.
