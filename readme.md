@@ -34,6 +34,12 @@ The parameters for the request are:
 - **Content-Type header**: "application/x-yaml"
 - **Body format**: RAW (with content as per the example below)
 
+or using the curl command for example as follows:
+
+```bash
+$ curl -v -H "Content-Type: application/x-yaml" --data-binary "@src/test/resources/payload.yml" "http://localhost:8080/run"
+```
+
 The service responds immediately (as it executes asynchronously) passing back a global unique identifier that can be used to query the state of the process later.
 
 The results can be obtained by inspecting the mongo database. [Robo 3T](https://robomongo.org/) can be used to query Mongo with a connection **localhost:27017**.
@@ -82,11 +88,24 @@ In order to find the log entries associated with a particular process, execute t
 - **Method**: GET
 - **Accept header**: "application/x-yaml" or "application/json"
 
+using the curl command:
+
+```bash
+$ curl -H "Accept: application/x-yaml" "http://localhost:8080/log/{processId}"
+```
+or to get the result in JSON format:
+
+```bash
+$ curl -H "Accept: application/json" "http://localhost:8080/log/{processId}"
+```
+
 ## Web API documentation
 
 Prometeo uses Swagger to document its web API.
 
-To access the Swagger UI try the following link http://localhost:8080/swagger-ui.html
+To see the Swagger UI go to http://localhost:8080/swagger-ui.html.
+
+To see the API documentation in JSON format go to http://localhost:8080/v2/api-docs.
 
 
 ## Ansible Project format
