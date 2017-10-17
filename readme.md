@@ -71,6 +71,7 @@ The payload needs to be in YAML format, and contain two main elements namely **c
     repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
     tag: ""
     verbosity: "vvv"
+    checkMode: "no"
     callbackUri: "https://myapp/callme/"
     project: "PO123"
 - vars:
@@ -90,6 +91,7 @@ The **command** element contains information used by Prometeo to retrieve and ex
 | repoUri  | The URI of the git repository containing the Ansible scripts to run.  | yes  |  
 | tag  | The tag in the git repository to use or empty if the master is used.  | no  |   
 | verbosity  | The level of verbosity of the Ansible execution output that is recorded in the Log database. The verbosity can be v, vv, vvv or vvvv. The default value is v. | no  |   
+| checkMode | When 'yes' it will not make any changes on remote systems. Instead, any module instrumented to support ‘check mode’ will report what changes they would have made rather than making them. | no |
 | callbackUri  | The URI Prometeo will call back when the process complete. No callback is performed if this value is not provided. | no  |  
 | project  | The unique reference identifying the project associated with the request. | yes  |    
 

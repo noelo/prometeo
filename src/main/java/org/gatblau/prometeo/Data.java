@@ -15,6 +15,7 @@ public class Data {
     private String _repoName;
     private String _vars;
     private String _verbosity;
+    private String _check;
 
     public Data(String processId, List<Object> payload){
         _processId = processId;
@@ -25,6 +26,7 @@ public class Data {
         _repoName = getRepoName(_repoUri);
         _vars = toJSON(getVars(payload));
         _verbosity= getCommandValue(payload, "verbosity");
+        _check = getCommandValue(payload, "checkMode");
     }
 
     private String getRepoName(String repoUri) {
@@ -99,6 +101,18 @@ public class Data {
 
     public boolean hasTag() {
         return _tag != null && _tag.trim().length() > 0;
+    }
+
+    public String getCheck() {
+        return _check;
+    }
+
+    public void setCheck(String check) {
+        _check = check;
+    }
+
+    public boolean checkMode() {
+        return (_check != null && _check.toLowerCase().trim().equals("yes"));
     }
 }
 

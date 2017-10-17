@@ -3,6 +3,7 @@
     repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
     tag: ""
     verbosity: "vvv"
+    checkMode: "no"
     callbackUri: "https://myapp/callme/"
     project: "PO123"
 - vars:

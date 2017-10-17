@@ -28,6 +28,7 @@ public class Processor implements Runnable {
     public void run() {
         try {
             Data data = new Data(_processId, _payload);
+            String[] c = getAnsibleRunCmd(data);
             _log.start(data);
             _log.payload(data);
             if (!run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS)) return;
@@ -67,15 +68,29 @@ public class Processor implements Runnable {
     }
 
     private String[] getAnsibleRunCmd(Data data) {
-        return new String[]{
-            "ansible-playbook",
-            String.format("./%2$s_%1$s/site.yml", data.getProcessId(), data.getRepoName()),
-            "-i",
-            String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
-            String.format("-%s", data.getVerbosity()),
-            "--extra-vars",
-            data.getVars()
-        };
+        if (!data.checkMode()) {
+            return new String[] {
+                "ansible-playbook",
+                String.format("./%2$s_%1$s/site.yml", data.getProcessId(), data.getRepoName()),
+                "-i",
+                String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
+                String.format("-%s", data.getVerbosity()),
+                "--extra-vars",
+                data.getVars()
+            };
+        }
+        else {
+            return new String[] {
+                "ansible-playbook",
+                String.format("./%2$s_%1$s/site.yml", data.getProcessId(), data.getRepoName()),
+                "-i",
+                String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
+                String.format("-%s", data.getVerbosity()),
+                "--check",
+                "--extra-vars",
+                data.getVars()
+            };
+        }
     }
 
     private String[] getAnsibleSetupCmd(Data data) {
