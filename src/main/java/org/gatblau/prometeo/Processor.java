@@ -1,6 +1,14 @@
 package org.gatblau.prometeo;
 
+import net.minidev.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Processor implements Runnable {
     private static String WORK_DIR = "/prometeo";
@@ -20,7 +28,7 @@ public class Processor implements Runnable {
     public void run() {
         try {
             Data data = new Data(_processId, _payload);
-            _log.logStart(data);
+            _log.start(data);
             _log.payload(data);
             if (!run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS)) return;
             if (data.hasTag()){
@@ -30,25 +38,21 @@ public class Processor implements Runnable {
             if (!run(data, getAnsibleRunCmd(data), EventType.RUN_ANSIBLE)) return;
             if (!run(data, getCleanupCmd(data), EventType.REMOVE_WORKDIR)) return;
             callBack(data);
-            _log.logShutdown(data);
+            _log.shutdown(data);
         }
         catch (Exception ex){
             ex.printStackTrace();
         }
     }
 
-    private void callBack(Data data) {
-        // TODO: create implementation to callback after process has finished
-    }
-
     private boolean run(Data data, String[] cmd, EventType eventType) {
         Command.Result r = _cmd.execute(cmd, WORK_DIR);
         if (r.exitVal == 0) {
-            _log.logProcess(data, r.output, ArrayToString(cmd), eventType);
+            _log.process(data, r.output, ArrayToString(cmd), eventType);
             return true;
         } else {
-            _log.logError(data, r.output, ArrayToString(cmd));
-            _log.logShutdown(data);
+            _log.error(data, r.output, ArrayToString(cmd));
+            _log.shutdown(data);
             return false;
         }
     }
@@ -110,5 +114,36 @@ public class Processor implements Runnable {
              "-rf",
              String.format("./%2$s_%1$s", data.getProcessId(), data.getRepoName())
          };
+    }
+
+    private void callBack(Data data) {
+        if (data.getCallbackUri() != null && data.getCallbackUri().trim().length() > 0) {
+            try {
+                RestTemplate client = new RestTemplate();
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("result", "OK");
+                payload.put("processId", data.getProcessId());
+                payload.put("repoUri", data.getRepoUri());
+                payload.put("tag", data.getTag());
+                ResponseEntity<String> response = client.postForEntity(data.getCallbackUri(), getEntity(payload), String.class);
+                if (response.getStatusCodeValue() == 200) {
+                    _log.callback(data);
+                }
+                else {
+                    _log.error(data, response.getBody(), String.format("callcack: %s", data.getCallbackUri()));
+                }
+            }
+            catch (Exception ex) {
+                _log.error(data, ex.getMessage(), String.format("callcack: %s", data.getCallbackUri()));
+            }
+        }
+    }
+
+    private HttpEntity<String> getEntity(Map<String, Object> map) {
+        JSONObject jsonObject = new JSONObject(map);
+        String payload = jsonObject.toString().replace("\\", "");
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add("Content-Type", "application/x-yaml");
+        return new HttpEntity<String>(payload, requestHeaders);
     }
 }

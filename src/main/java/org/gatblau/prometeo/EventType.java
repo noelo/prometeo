@@ -10,6 +10,7 @@ public enum EventType {
     ERROR,
     CHECKOUT_TAG,
     CONFIG,
+    CALLBACK,
 }
 
 

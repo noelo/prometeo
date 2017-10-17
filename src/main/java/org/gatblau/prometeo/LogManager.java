@@ -39,21 +39,21 @@ public class LogManager {
         }
     }
 
-    public void logStart(Data data) {
+    public void start(Data data) {
         String info = String.format("A new Prometeo process '%s' is starting up.", data.getProcessId());
         insert(new Event(data.getProcessId(), data.getProject(), EventType.START_PROCESS, info));
     }
 
-    public void logShutdown(Data data) {
+    public void shutdown(Data data) {
         String info = String.format("The Prometeo process '%s' is shutting down.", data.getProcessId());
         insert(new Event(data.getProcessId(), data.getProject(), EventType.END_PROCESS, info));
     }
 
-    public void logProcess(Data data, String output, String command, EventType eventType) {
+    public void process(Data data, String output, String command, EventType eventType) {
         insert(new Event(data.getProcessId(), data.getProject(), eventType, output, command));
     }
 
-    public void logError(Data data, String output, String command) {
+    public void error(Data data, String output, String command) {
         insert(new Event(data.getProcessId(), data.getProject(), EventType.ERROR, output, command));
     }
 
@@ -65,6 +65,10 @@ public class LogManager {
         catch (Exception ex) {
             insert(new Event(data.getProcessId(), data.getProject(), EventType.ERROR, ex.getMessage()));
         }
+    }
+
+    public void callback(Data data) {
+        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, "Called back successfully."));
     }
 
     public List<Event> getLogs(String processId) {
