@@ -203,7 +203,7 @@ $ java -DWORK_DIR=/Users/[user_x]/IdeaProjects -jar prometeo-0.0.1-SNAPSHOT.jar
 In developer mode Prometeo does not perform the following operations:
 - clone the ansible project repo
 - create a process specific folder for the cloned repo
-- install roles from the requirements.txt file
+- install roles from the requirements.yml file
 - delete the process specific folder
 
-**NOTE:** *WORK_DIR* must point to the folder that contains the Ansible project.
+**NOTE:** *WORK_DIR* must point to the **parent** folder to the one that contains the Ansible project.
