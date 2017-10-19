@@ -3,6 +3,7 @@ package org.gatblau.prometeo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,9 @@ public class PrometeoWebAPI {
     @Autowired
     private Executor _executor;
 
+    @Value("${WORK_DIR:/prometeo}")
+    private String _workDir;
+
     @ApiOperation(value = "Returns OK if the service is up and running.", notes = "Use it as a readiness probe for the service.", response = String.class)
     @RequestMapping(value = "/", method = RequestMethod.GET, produces = "text/html")
     public String index() {
@@ -33,7 +37,7 @@ public class PrometeoWebAPI {
     @RequestMapping(path = "/run", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
-        _executor.execute(new Processor(processId, payload, _cmd, _log));
+        _executor.execute(new Processor(processId, payload, _cmd, _log, _workDir));
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 

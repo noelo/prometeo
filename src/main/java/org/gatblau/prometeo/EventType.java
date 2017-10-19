@@ -11,6 +11,7 @@ public enum EventType {
     CHECKOUT_TAG,
     CONFIG,
     CALLBACK,
+    START_DEV_PROCESS,
 }
 
 

@@ -44,6 +44,11 @@ public class LogManager {
         insert(new Event(data.getProcessId(), data.getProject(), EventType.START_PROCESS, info));
     }
 
+    public void startDevMode(Data data) {
+        String info = String.format("A new Prometeo process '%s' is starting up in DEVELOPER MODE..", data.getProcessId());
+        insert(new Event(data.getProcessId(), data.getProject(), EventType.START_DEV_PROCESS, info));
+    }
+
     public void shutdown(Data data) {
         String info = String.format("The Prometeo process '%s' is shutting down.", data.getProcessId());
         insert(new Event(data.getProcessId(), data.getProject(), EventType.END_PROCESS, info));

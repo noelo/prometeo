@@ -147,3 +147,21 @@ The prometeo docker image can be configured by changing the following environmen
 | CORE_POOL_SIZE | Set the ThreadPoolExecutor's core pool size used to manage Ansible tasks.  | 2 |
 | MAX_POOL_SIZE | Set the ThreadPoolExecutor's maximum pool size used to manage Ansible tasks. | 2 |
 | QUEUE_CAPACITY | Set the capacity for the ThreadPoolExecutor's BlockingQueue. | 500 |
+
+## Developer Mode
+
+Prometeo can run in developer mode to facilitate testing playbooks in the local machine.
+Developer mode runs outside of Docker and can be invoked by executing the Prometeo jar file from the command line passing the WORK_DIR environment variable pointing to the location of the folder where the playbook projects are contained.
+
+For example:
+
+```bash
+$ java -DWORK_DIR=/Users/[user_x]/IdeaProjects -jar prometeo-0.0.1-SNAPSHOT.jar
+```
+In developer mode Prometeo does not perform the following operations:
+- clone the ansible project repo
+- create a process specific folder for the cloned repo
+- install roles from the requirements.txt file
+- delete the process specific folder
+
+**NOTE:** *WORK_DIR* must point to the folder that contains the Ansible project.

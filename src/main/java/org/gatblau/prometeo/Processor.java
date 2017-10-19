@@ -11,24 +11,33 @@ import java.util.List;
 import java.util.Map;
 
 public class Processor implements Runnable {
-    private static String WORK_DIR = "/prometeo";
     private LogManager _log;
     private Command _cmd;
     private String _processId;
     private List<Object> _payload;
+    private String _workDir;
 
-    public Processor(String processId, List<Object> payload, Command cmd, LogManager log) {
+    public Processor(String processId, List<Object> payload, Command cmd, LogManager log, String workDir) {
         _cmd = cmd;
         _log = log;
         _payload = payload;
-        _processId= processId;
+        _processId = processId;
+        _workDir = workDir;
     }
 
     @Override
     public void run() {
+        if (devMode()){
+            runDevMode();
+        }
+        else {
+            runProdMode();
+        }
+    }
+
+    private void runProdMode(){
         try {
             Data data = new Data(_processId, _payload);
-            String[] c = getAnsibleRunCmd(data);
             _log.start(data);
             _log.payload(data);
             if (!run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS)) return;
@@ -46,8 +55,17 @@ public class Processor implements Runnable {
         }
     }
 
+    private void runDevMode(){
+        Data data = new Data(_processId, _payload);
+        _log.startDevMode(data);
+        _log.payload(data);
+        if (!run(data, getAnsibleDevModeRunCmd(data), EventType.RUN_ANSIBLE)) return;
+        callBack(data);
+        _log.shutdown(data);
+    }
+
     private boolean run(Data data, String[] cmd, EventType eventType) {
-        Command.Result r = _cmd.execute(cmd, WORK_DIR);
+        Command.Result r = _cmd.execute(cmd, _workDir);
         if (r.exitVal == 0) {
             _log.process(data, r.output, ArrayToString(cmd), eventType);
             return true;
@@ -89,6 +107,32 @@ public class Processor implements Runnable {
                 "--check",
                 "--extra-vars",
                 data.getVars()
+            };
+        }
+    }
+
+    private String[] getAnsibleDevModeRunCmd(Data data) {
+        if (!data.checkMode()) {
+            return new String[] {
+                    "ansible-playbook",
+                    String.format("./%1$s/site.yml", data.getRepoName()),
+                    "-i",
+                    String.format("./%1$s/inventory", data.getRepoName()),
+                    String.format("-%s", data.getVerbosity()),
+                    "--extra-vars",
+                    data.getVars()
+            };
+        }
+        else {
+            return new String[] {
+                    "ansible-playbook",
+                    String.format("./%1$s/site.yml", data.getRepoName()),
+                    "-i",
+                    String.format("./%1$s/inventory", data.getRepoName()),
+                    String.format("-%s", data.getVerbosity()),
+                    "--check",
+                    "--extra-vars",
+                    data.getVars()
             };
         }
     }
@@ -160,5 +204,9 @@ public class Processor implements Runnable {
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.add("Content-Type", "application/x-yaml");
         return new HttpEntity<String>(payload, requestHeaders);
+    }
+
+    private boolean devMode() {
+        return !_workDir.equals("/prometeo");
     }
 }
