@@ -200,6 +200,12 @@ For example:
 ```bash
 $ java -DWORK_DIR=/Users/[user_x]/IdeaProjects -jar prometeo-0.0.1-SNAPSHOT.jar
 ```
+
+to create the prometeo jar file execute the *package* goal in maven:
+```bash
+$ mvn package
+```
+
 In developer mode Prometeo does not perform the following operations:
 - clone the ansible project repo
 - create a process specific folder for the cloned repo
