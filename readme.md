@@ -6,6 +6,7 @@ Prometeo is a scalable Ansible control node, which can run in OpenShift.
 
 It exposes a Web API based on Spring Boot accepting a YAML payload and logs the execution steps and errors into a MongoDb database.
 
+<a name="toc"></a>
 ## Table of Contents
 - [Overview](#overview)
 - [Getting Started using build scripts](#started_scripts)
@@ -19,7 +20,7 @@ It exposes a Web API based on Spring Boot accepting a YAML payload and logs the 
 - [Developer Mode](#dev_mode)
 
 <a name="started_scripts"></a>
-## Overview
+## Overview [(up)](#toc)
 Prometeo is an Ansible control node designed to run as a Docker container.
 The core is comprised by two processes, namely the Web API and the Log database.
 
@@ -42,7 +43,7 @@ The following figure shows the main elements of the application:
 <img src="doc/prometeo.png"/>
 
 <a name="started_scripts"></a>
-## Getting Started using build scripts
+## Getting Started using build scripts [(up)](#toc)
 
 The easiest way to get Prometeo up and running is to use docker-compose to get the Prometeo web API and the Log containers running.
 
@@ -59,7 +60,7 @@ $ curl https://raw.githubusercontent.com/prometeo-cloud/prometeo/master/docker-c
 To test the Web API is running click on the following link: [Web API](http://localhost:8080).
 
 <a name="started_europa"></a>
-## Getting Started using Europa
+## Getting Started using Europa [(up)](#toc)
 
 If you have windows on your PC, the easiest way to get started is to follow the steps below:
 - Install VirtualBox on laptop
@@ -77,7 +78,7 @@ If you have windows on your PC, the easiest way to get started is to follow the 
 - Use IntelliJ Robomongo plugin to connect to database and inspect events
 
 <a name="testing_ctrl_node"></a>
-## Testing the control node
+## Testing the control node [(up)](#toc)
 
 To test the control node, a payload needs to be posted to the Web API to the **/run** URL. An application such as [Postman](https://www.getpostman.com/) can be used to post the payload.
 
@@ -98,7 +99,7 @@ The service responds immediately (as it executes asynchronously) passing back a 
 The results can be obtained by inspecting the mongo database. [Robo 3T](https://robomongo.org/) can be used to query Mongo with a connection **localhost:27017**.
 
 <a name="payload_format"></a>
-### Payload format
+### Payload format [(up)](#toc)
 
 The payload needs to be in YAML format, and contain two main elements namely **command** and **vars**, as shown in the following example:
 
@@ -137,7 +138,7 @@ The **vars** element contains all the configuration variables required by the ex
 The format for this section is basically a list of variables in YAML format. The variables in this section are the ones required by the scripts in the repoUri to run.
 
 <a name="proc_status"></a>
-## Querying process status
+## Querying process status [(up)](#toc)
 
 In order to find the log entries associated with a particular process, execute the following query passing the identifier of the process (processId) retrieved when the execution was requested:
 
@@ -157,7 +158,7 @@ $ curl -H "Accept: application/json" "http://localhost:8080/log/{processId}"
 ```
 
 <a name="web_api_doc"></a>
-## Web API documentation
+## Web API documentation [(up)](#toc)
 
 Prometeo uses Swagger to document its web API.
 
@@ -166,7 +167,7 @@ To see the Swagger UI go to http://localhost:8080/swagger-ui.html.
 To see the API documentation in JSON format go to http://localhost:8080/v2/api-docs.
 
 <a name="project_format"></a>
-## Ansible Project format
+## Ansible Project format [(up)](#toc)
 
 Prometeo makes explicit assumptions about the format of the Ansible projects that runs.
 
@@ -175,7 +176,7 @@ Two types of git repositories are required:
 - **Role Repository**: it contains an Ansible role. Variables are automatically passed by Prometeo to the role. See the [prometeo_role_test](https://github.com/prometeo-cloud/prometeo_role_test) for an example of a role repository.
 
 <a name="config_vars"></a>
-## Configuration Variables
+## Configuration Variables [(up)](#toc)
 The prometeo docker image can be configured by changing the following environment variables:
 
 | Variable  | Description  | Default Value  |
@@ -189,7 +190,7 @@ The prometeo docker image can be configured by changing the following environmen
 | QUEUE_CAPACITY | Set the capacity for the ThreadPoolExecutor's BlockingQueue. | 500 |
 
 <a name="dev_mode"></a>
-## Developer Mode
+## Developer Mode [(up)](#toc)
 
 Prometeo can run in developer mode to facilitate testing playbooks in the local machine.
 Developer mode runs outside of Docker and can be invoked by executing the Prometeo jar file from the command line passing the WORK_DIR environment variable pointing to the location of the folder where the playbook projects are contained.
