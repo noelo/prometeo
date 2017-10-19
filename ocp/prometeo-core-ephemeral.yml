@@ -4,7 +4,7 @@ apiVersion: v1
 metadata:
   name: prometeo-core-ephemeral
   annotations:
-    openshift.io/display-name: Prometeo Web + MongoDb (Ephemeral)
+    openshift.io/display-name: Prometeo Core Services (Ephemeral)
     description: |-
       Basic template for the Prometeo core services: Web API and the Log (ephemeral).
       NOTE: The Log service created by this template uses non-persistent storage. To setup persisted storage, change this template to use a persistent volume claim instead of emptydir.
@@ -79,7 +79,7 @@ objects:
       spec:
         containers:
         - name: prometeo-wapi
-          image: "${PROMETEO_IMAGE}"
+          image: " "
           ports:
           - containerPort: "${HTTP_PORT}"
           readinessProbe:
@@ -237,12 +237,12 @@ objects:
 parameters:
 
 - name: WAPI_HOST
-  description: The exposed hostname that will route to the wordpress service, if left blank a value will be defaulted.
+  description: The exposed hostname that will route to the Web API service, if left blank a value will be defaulted.
   value: ''
 
-- name: PROMETEO_IMAGE
-  description: Image to use for Prometeo
-  value: prometeo
+- name: PROMETEO_VERSION
+  description: Tag of the image to use for Prometeo
+  value: '0.0.1-0'
 
 - name: WAPI_SERVICE_NAME
   description: Prometeo service name
