@@ -28,7 +28,7 @@ public class Log {
             _connected = true;
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            System.out.println(String.format("WARNING: cannot connect to LOG database: %s. Will attempt to connect later.", ex.getMessage()));
         }
     }
 
