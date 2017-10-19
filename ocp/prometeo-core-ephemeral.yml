@@ -61,7 +61,7 @@ objects:
       imageChangeParams:
         automatic: true
         containerNames:
-        - prometeo
+        - prometeo-wapi
         from:
           kind: ImageStreamTag
           name: prometeo:${PROMETEO_VERSION}
@@ -92,7 +92,7 @@ objects:
             timeoutSeconds: 1
             initialDelaySeconds: 30
             tcpSocket:
-              port: 8080
+              port: "${HTTP_PORT}"
           env:
           - name: HTTP_PORT
             value: "${HTTP_PORT}"
@@ -119,10 +119,10 @@ objects:
       template.openshift.io/expose-admin_password: "{.data['database-admin-password']}"
       template.openshift.io/expose-database_name: "{.data['database-name']}"
   stringData:
-    database-user: "${MONGODB_USER}"
+    database-user: "prometeo"
     database-password: "${MONGODB_PASSWORD}"
     database-admin-password: "${MONGODB_ADMIN_PASSWORD}"
-    database-name: "${MONGODB_DATABASE}"
+    database-name: "prometeo"
 
 - kind: Service
   apiVersion: v1
@@ -243,10 +243,26 @@ parameters:
 - name: PROMETEO_VERSION
   description: Tag of the image to use for Prometeo
   value: '0.0.1-0'
+  required: true
 
 - name: WAPI_SERVICE_NAME
   description: Prometeo service name
   value: prometeo-wapi
+
+- name: CORE_POOL_SIZE
+  displayName: Core Pool Size
+  description: The core size of the WAPI thead pool.
+  value: 2
+
+- name: MAX_POOL_SIZE
+  displayName: Maximum Pool Size
+  description: The maximum size of the WAPI thead pool.
+  value: 5
+
+- name: QUEUE_CAPACITY
+  displayName: Thread Pool Queue Capacity
+  description: The capacity of the WAPI thead pool queue.
+  value: 500
 
 - name: NAMESPACE
   displayName: Namespace
@@ -259,22 +275,10 @@ parameters:
   value: 512Mi
   required: true
 
-- name: NAMESPACE
-  displayName: Namespace
-  description: The OpenShift Namespace where the ImageStream resides.
-  value: openshift
-
 - name: DATABASE_SERVICE_NAME
   displayName: Database Service Name
   description: The name of the OpenShift Service exposed for the database.
   value: mongodb
-  required: true
-
-- name: MONGODB_USER
-  displayName: MongoDB Connection Username
-  description: Username for MongoDB user that will be used for accessing the database.
-  generate: expression
-  from: user[A-Z0-9]{3}
   required: true
 
 - name: MONGODB_PASSWORD
@@ -282,12 +286,6 @@ parameters:
   description: Password for the MongoDB connection user.
   generate: expression
   from: "[a-zA-Z0-9]{16}"
-  required: true
-
-- name: MONGODB_DATABASE
-  displayName: MongoDB Database Name
-  description: Name of the MongoDB database accessed.
-  value: sampledb
   required: true
 
 - name: MONGODB_ADMIN_PASSWORD
