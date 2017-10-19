@@ -25,7 +25,7 @@ objects:
     name: wapi
     annotations:
       description: Exposes and load balances the web api pods
-#      service.alpha.openshift.io/dependencies: '[{"name": "${LOG_SERVICE_NAME}", "kind": "Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}", "kind": "Service"}]'
   spec:
     ports:
     - name: prometeo-core-ephemeral
