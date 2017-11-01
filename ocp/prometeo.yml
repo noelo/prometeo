@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: prometeo
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: prometeo
+    name: prometeo
+  spec:
+    replicas: 1
+    selector:
+      app: prometeo
+      deploymentconfig: prometeo
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftWebConsole
+        creationTimestamp: null
+        labels:
+          app: prometeo
+          deploymentconfig: prometeo
+      spec:
+        containers:
+        - image: 172.30.1.1:5000/myproject/prometeo@sha256:b52150bb5fe7e9eaaf0f7f331cc070e80dc17e1416af1dfb50c1913e7e2c3975
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: prometeo
+          ports:
+          - containerPort: 22
+            protocol: TCP
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8778
+            protocol: TCP
+          - containerPort: 9779
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - prometeo
+        from:
+          kind: ImageStreamTag
+          name: prometeo:latest
+          namespace: myproject
+      type: ImageChange
+  status:
+    availableReplicas: 0
+    latestVersion: 0
+    observedGeneration: 0
+    replicas: 0
+    unavailableReplicas: 0
+    updatedReplicas: 0
