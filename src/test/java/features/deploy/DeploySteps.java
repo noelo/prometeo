@@ -27,7 +27,7 @@ public class DeploySteps extends IntegrationTest {
         String payload = util.get(Vars.KEY_CONFIG_PAYLOAY);
 
         ResponseEntity<String> response = client.postForEntity(
-                "http://localhost:" + port + "/run",
+                "http://localhost:" + port + "/run/sync",
                 util.getEntity(payload),
                 String.class);
 

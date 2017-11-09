@@ -33,11 +33,19 @@ public class PrometeoWebAPI {
         return "OK";
     }
 
-    @ApiOperation(value = "Request the execution of an Ansible playbook.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched. Use it to query status of the execution using the /process operation.")
+    @ApiOperation(value = "Request the execution of an Ansible playbook in a asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched. Use it to query status of the execution using the /process operation.")
     @RequestMapping(path = "/run", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
         _executor.execute(new Processor(processId, payload, _cmd, _log, _workDir));
+        return ResponseEntity.ok(String.format("ProcessId: %s", processId));
+    }
+
+    @ApiOperation(value = "Request the execution of an Ansible playbook in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched. Use it to query status of the execution using the /process operation.")
+    @RequestMapping(path = "/run/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
+    public ResponseEntity<String> runSync(@RequestBody List<Object> payload) throws InterruptedException {
+        String processId = UUID.randomUUID().toString();
+        new Processor(processId, payload, _cmd, _log, _workDir).run();
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 
