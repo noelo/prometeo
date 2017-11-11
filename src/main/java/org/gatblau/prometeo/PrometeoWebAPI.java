@@ -33,7 +33,7 @@ public class PrometeoWebAPI {
         return "OK";
     }
 
-    @ApiOperation(value = "Request the execution of an Ansible playbook in a asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched. Use it to query status of the execution using the /process operation.")
+    @ApiOperation(value = "Request the execution of an Ansible playbook in an asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched.")
     @RequestMapping(path = "/run", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
@@ -41,7 +41,7 @@ public class PrometeoWebAPI {
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 
-    @ApiOperation(value = "Request the execution of an Ansible playbook in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched. Use it to query status of the execution using the /process operation.")
+    @ApiOperation(value = "Request the execution of an Ansible playbook in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns a GUID for the process that has been launched after the whole process has completed.")
     @RequestMapping(path = "/run/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> runSync(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
@@ -54,6 +54,13 @@ public class PrometeoWebAPI {
     public ResponseEntity<List<Event>> process(@PathVariable("processId") String processId) {
         List<Event> logs = _log.getLogs(processId);
         return ResponseEntity.ok(logs);
+    }
+
+    @ApiOperation(value = "Returns the result of the execution of the specified process.", notes = "provides the result of the execution of a playbook based on the specified process.")
+    @RequestMapping(path = "/result/{processId}", method = RequestMethod.GET, produces = {"application/json", "application/x-yaml" } )
+    public ResponseEntity<Result> result(@PathVariable("processId") String processId) {
+        Result result = _log.getResult(processId);
+        return ResponseEntity.ok(result);
     }
 
     @ApiOperation(value = "Gets the command used by Prometeo to execute the playbook.", notes = "Pass a YAML payload with command information and playbook variables. The request returns the command used to run the playbook specified in the payload without actually running it. It is provided for testing purposes.")

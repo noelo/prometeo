@@ -58,12 +58,12 @@ public class LogManager {
         }
     }
 
-    public void callback(Data data) {
-        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, "Called back successfully."));
+    public void callback(Data data, String info) {
+        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, info));
     }
 
-    public void callback(Data data, boolean success, String error) {
-        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, "Called back successfully.", success, error));
+    public void callback(Data data, boolean success, String info, String error) {
+        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, info, success, error));
     }
 
     public List<Event> getLogs(String processId) {

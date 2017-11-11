@@ -40,14 +40,26 @@ public class Processor implements Runnable {
             Data data = new Data(_processId, _payload);
             _log.start(data);
             _log.payload(data);
-            if (!run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS)) return;
+
+            RunResult result = run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS);
+            checkContinue(data, result);
+
             if (data.hasTag()){
-                if (!run(data, getGitCheckoutTagCmd(data), EventType.CHECKOUT_TAG)) return;
+                result = run(data, getGitCheckoutTagCmd(data), EventType.CHECKOUT_TAG);
+                checkContinue(data, result);
             }
-            if (!run(data, getAnsibleSetupCmd(data), EventType.SETUP_ANSIBLE)) return;
-            if (!run(data, getAnsibleRunCmd(data), EventType.RUN_ANSIBLE)) return;
-            if (!run(data, getCleanupCmd(data), EventType.REMOVE_WORKDIR)) return;
-            callBack(data);
+
+            result = run(data, getAnsibleSetupCmd(data), EventType.SETUP_ANSIBLE);
+            checkContinue(data, result);
+
+            result = run(data, getAnsibleRunCmd(data), EventType.RUN_ANSIBLE);
+            checkContinue(data, result);
+
+            doCallback(data, null);
+
+            result = run(data, getCleanupCmd(data), EventType.REMOVE_WORKDIR);
+            checkContinue(data, result);
+
             _log.shutdown(data);
         }
         catch (Exception ex){
@@ -59,20 +71,24 @@ public class Processor implements Runnable {
         Data data = new Data(_processId, _payload);
         _log.startDevMode(data);
         _log.payload(data);
-        if (!run(data, getAnsibleDevModeRunCmd(data), EventType.RUN_ANSIBLE)) return;
-        callBack(data);
+
+        checkContinue(data, run(data, getAnsibleDevModeRunCmd(data), EventType.RUN_ANSIBLE));
+
+        doCallback(data, null);
+
         _log.shutdown(data);
     }
 
-    private boolean run(Data data, String[] cmd, EventType eventType) {
+    private RunResult run(Data data, String[] cmd, EventType eventType) {
         Command.Result r = _cmd.execute(cmd, _workDir);
         if (r.exitVal == 0) {
             _log.process(data, r.output, ArrayToString(cmd), eventType, true, null);
-            return true;
-        } else {
-            _log.process(data, null, ArrayToString(cmd), eventType, true, r.output);
+            return new RunResult(true, null);
+        }
+        else {
+            _log.process(data, null, ArrayToString(cmd), eventType, false, r.output);
             _log.shutdown(data);
-            return false;
+            return new RunResult(false, r.output);
         }
     }
 
@@ -176,29 +192,6 @@ public class Processor implements Runnable {
          };
     }
 
-    private void callBack(Data data) {
-        if (data.getCallbackUri() != null && data.getCallbackUri().trim().length() > 0) {
-            try {
-                RestTemplate client = new RestTemplate();
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("result", "OK");
-                payload.put("processId", data.getProcessId());
-                payload.put("repoUri", data.getRepoUri());
-                payload.put("tag", data.getTag());
-                ResponseEntity<String> response = client.postForEntity(data.getCallbackUri(), getEntity(payload), String.class);
-                if (response.getStatusCodeValue() == 200) {
-                    _log.callback(data);
-                }
-                else {
-                    _log.callback(data, false, response.getBody());
-                }
-            }
-            catch (Exception ex) {
-                _log.callback(data, false, ex.getMessage());
-            }
-        }
-    }
-
     private HttpEntity<String> getEntity(Map<String, Object> map) {
         JSONObject jsonObject = new JSONObject(map);
         String payload = jsonObject.toString().replace("\\", "");
@@ -209,5 +202,61 @@ public class Processor implements Runnable {
 
     private boolean devMode() {
         return !_workDir.equals("/prometeo");
+    }
+
+    private class RunResult {
+        RunResult(boolean success, String error){
+            this.success = success;
+            this.error = error;
+        }
+        public boolean success;
+        public String error;
+    }
+
+    private void doCallback(Data data, String error) {
+        if (data.getCallbackUri() != null && data.getCallbackUri().trim().length() > 0) {
+            try {
+                RestTemplate client = new RestTemplate();
+                Map<String, Object> payload = new HashMap<>();
+                if (error == null) {
+                    payload.put("result", "OK");
+                }
+                else {
+                    payload.put("result", error);
+                }
+                payload.put("processId", data.getProcessId());
+                payload.put("repoUri", data.getRepoUri());
+                payload.put("tag", data.getTag());
+                ResponseEntity<String> response = client.postForEntity(data.getCallbackUri(), getEntity(payload), String.class);
+                if (response.getStatusCodeValue() == 200) {
+                    if (error == null){
+                        _log.callback(data, "Called back reported successful execution.");
+                    } else {
+                        _log.callback(data, false, "Callback failed.", response.getStatusCode().getReasonPhrase());
+                    }
+                }
+                else {
+                    _log.callback(data, false, "Called back reporting execution with errors.", response.getBody());
+                }
+            }
+            catch (Exception ex) {
+                _log.callback(data, false, "Callback failed.", ex.getMessage());
+            }
+        }
+    }
+
+    private boolean callbackIfFailed(Data data, RunResult result) {
+        if (!result.success) {
+            doCallback(data, result.error);
+            return true;
+        }
+        return false;
+    }
+
+    private void checkContinue(Data data, RunResult result) {
+        if (callbackIfFailed(data, result)) {
+            _log.shutdown(data);
+            return;
+        }
     }
 }

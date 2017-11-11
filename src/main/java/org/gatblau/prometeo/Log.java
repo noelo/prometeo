@@ -64,6 +64,6 @@ public class Log {
     }
 
     public Event getError(String processId) {
-        return _events.find(and(eq("processId", processId), eq("eventType", EventType.ERROR.name()))).first();
+        return _events.find(and(eq("processId", processId), eq("success", false))).first();
     }
 }
