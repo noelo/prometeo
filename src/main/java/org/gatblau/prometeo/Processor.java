@@ -67,10 +67,10 @@ public class Processor implements Runnable {
     private boolean run(Data data, String[] cmd, EventType eventType) {
         Command.Result r = _cmd.execute(cmd, _workDir);
         if (r.exitVal == 0) {
-            _log.process(data, r.output, ArrayToString(cmd), eventType);
+            _log.process(data, r.output, ArrayToString(cmd), eventType, true, null);
             return true;
         } else {
-            _log.error(data, r.output, ArrayToString(cmd));
+            _log.process(data, null, ArrayToString(cmd), eventType, true, r.output);
             _log.shutdown(data);
             return false;
         }
@@ -82,7 +82,8 @@ public class Processor implements Runnable {
             sb.append(value);
             sb.append(" ");
         }
-        return sb.toString().trim();
+        String value = sb.toString().trim();
+        return (value.isEmpty() ?  null : value);
     }
 
     private String[] getAnsibleRunCmd(Data data) {
@@ -189,11 +190,11 @@ public class Processor implements Runnable {
                     _log.callback(data);
                 }
                 else {
-                    _log.error(data, response.getBody(), String.format("callcack: %s", data.getCallbackUri()));
+                    _log.callback(data, false, response.getBody());
                 }
             }
             catch (Exception ex) {
-                _log.error(data, ex.getMessage(), String.format("callcack: %s", data.getCallbackUri()));
+                _log.callback(data, false, ex.getMessage());
             }
         }
     }

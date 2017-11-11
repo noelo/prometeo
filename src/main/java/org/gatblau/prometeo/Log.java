@@ -11,6 +11,7 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
@@ -60,5 +61,9 @@ public class Log {
             }
         }
         return events;
+    }
+
+    public Event getError(String processId) {
+        return _events.find(and(eq("processId", processId), eq("eventType", EventType.ERROR.name()))).first();
     }
 }

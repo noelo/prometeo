@@ -11,6 +11,7 @@ import java.util.List;
 @Component
 public class LogManager {
     private Log thisLog;
+
     @Value("${LOG_DB_NAME:prometeo}")
     private String _dbName;
 
@@ -23,19 +24,8 @@ public class LogManager {
     private ObjectMapper _mapper = new ObjectMapper(new YAMLFactory());
 
     private void insert(Event event) {
-        String insertFailed = String.format("Connection to Log database failed: '%s'. Could not insert '%s' event.", "%s", event.getEventType().toString());
-        if (thisLog != null) {
+        if (canAccessLog(event.getProcessId())) {
             thisLog.insertEvent(event);
-        }
-        else {
-            Log newLog = new Log(_dbName, _dbHost, _dbPort);
-            if (newLog.connected()){
-                newLog.insertEvent(event);
-                thisLog = newLog;
-            }
-            else {
-                System.out.println(String.format(insertFailed, "Connection timeout."));
-            }
         }
     }
 
@@ -54,12 +44,8 @@ public class LogManager {
         insert(new Event(data.getProcessId(), data.getProject(), EventType.END_PROCESS, info));
     }
 
-    public void process(Data data, String output, String command, EventType eventType) {
-        insert(new Event(data.getProcessId(), data.getProject(), eventType, output, command));
-    }
-
-    public void error(Data data, String output, String command) {
-        insert(new Event(data.getProcessId(), data.getProject(), EventType.ERROR, output, command));
+    public void process(Data data, String output, String command, EventType eventType, boolean success, String error) {
+        insert(new Event(data.getProcessId(), data.getProject(), eventType, output, command, success, error));
     }
 
     public void payload(Data data) {
@@ -76,21 +62,39 @@ public class LogManager {
         insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, "Called back successfully."));
     }
 
+    public void callback(Data data, boolean success, String error) {
+        insert(new Event(data.getProcessId(), data.getProject(), EventType.CALLBACK, "Called back successfully.", success, error));
+    }
+
     public List<Event> getLogs(String processId) {
-        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
-        if (thisLog != null) {
+        if (canAccessLog(processId)) {
             return thisLog.get(processId);
         }
-        else {
+        return new ArrayList<>();
+    }
+
+    public Result getResult(String processId) {
+        if (canAccessLog(processId)) {
+            Event error = thisLog.getError(processId);
+            if (error == null) {
+                return new Result();
+            }
+            return new Result(error);
+        }
+        return new Result("Log database is not accessible.");
+    }
+
+    private boolean canAccessLog(String processId) {
+        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
+        if (thisLog == null) {
             Log newLog = new Log(_dbName, _dbHost, _dbPort);
-            if (newLog.connected()){
+            if (newLog.connected()) {
                 thisLog = newLog;
-                return thisLog.get(processId);
             }
             else {
                 System.out.println(String.format(queryFailed, "Connection timeout."));
             }
         }
-        return new ArrayList<>();
+        return thisLog != null;
     }
 }
