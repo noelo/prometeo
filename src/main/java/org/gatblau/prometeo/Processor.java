@@ -131,25 +131,25 @@ public class Processor implements Runnable {
     private String[] getAnsibleDevModeRunCmd(Data data) {
         if (!data.checkMode()) {
             return new String[] {
-                    "ansible-playbook",
-                    String.format("./%1$s/site.yml", data.getRepoName()),
-                    "-i",
-                    String.format("./%1$s/inventory", data.getRepoName()),
-                    String.format("-%s", data.getVerbosity()),
-                    "--extra-vars",
-                    data.getVars()
+                "ansible-playbook",
+                String.format("./%1$s/site.yml", data.getProjectFolder()),
+                "-i",
+                String.format("./%1$s/inventory", data.getProjectFolder()),
+                String.format("-%s", data.getVerbosity()),
+                "--extra-vars",
+                data.getVars()
             };
         }
         else {
             return new String[] {
-                    "ansible-playbook",
-                    String.format("./%1$s/site.yml", data.getRepoName()),
-                    "-i",
-                    String.format("./%1$s/inventory", data.getRepoName()),
-                    String.format("-%s", data.getVerbosity()),
-                    "--check",
-                    "--extra-vars",
-                    data.getVars()
+                "ansible-playbook",
+                String.format("./%1$s/site.yml", data.getProjectFolder()),
+                "-i",
+                String.format("./%1$s/inventory", data.getProjectFolder()),
+                String.format("-%s", data.getVerbosity()),
+                "--check",
+                "--extra-vars",
+                data.getVars()
             };
         }
     }

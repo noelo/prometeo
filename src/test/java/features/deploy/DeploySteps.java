@@ -1,6 +1,8 @@
 package features.deploy;
 
+import cucumber.api.PendingException;
 import cucumber.api.java.en.And;
+import cucumber.api.java.en.Given;
 import features.IntegrationTest;
 import features.Vars;
 import org.gatblau.prometeo.PrometeoWebAPI;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
 public class DeploySteps extends IntegrationTest {
 
@@ -44,5 +47,18 @@ public class DeploySteps extends IntegrationTest {
                 util.get(Vars.KEY_PROCESS_ID).toString());
 
         assert(response.getStatusCodeValue() == 200);
+    }
+
+    @Given("^the working directory environment variable is set$")
+    public void theWorkingDirectoryEnvironmentVariableIsSet() throws Throwable {
+        if(System.getenv("WORK_DIR").isEmpty()) {
+            throw new Exception("WORK_DIR environment variable needs to be set up for this use case.");
+        };
+    }
+
+    @Given("^the payload for dev mode is well defined$")
+    public void thePayloadForDevModeIsWellDefined() throws Throwable {
+        String payload = util.getFile("payload_dev.yml");
+        util.put(Vars.KEY_CONFIG_PAYLOAY, payload);
     }
 }

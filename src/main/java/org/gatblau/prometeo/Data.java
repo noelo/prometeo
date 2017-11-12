@@ -16,24 +16,29 @@ public class Data {
     private String _vars;
     private String _verbosity;
     private String _check;
+    private String _projectFolder;
 
     public Data(String processId, List<Object> payload){
         _processId = processId;
-        _repoUri = getCommandValue(payload, "repoUri", true);
+        _repoUri = getCommandValue(payload, "repoUri", System.getenv("WORK_DIR") != null);
         _tag = getCommandValue(payload, "tag");
         _callbackUri = getCommandValue(payload, "callbackUri");
-        _project = getCommandValue(payload, "project", true);
+        _project = getCommandValue(payload, "project", System.getenv("WORK_DIR") != null);
         _repoName = getRepoName(_repoUri);
         _vars = toJSON(getVars(payload));
         _verbosity= getCommandValue(payload, "verbosity");
         _check = getCommandValue(payload, "checkMode");
+        _projectFolder = getCommandValue(payload, "folder");
     }
 
     private String getRepoName(String repoUri) {
-        String[] values = repoUri.split("/");
-        String value = values[values.length - 1];
-        values = value.split("\\.");
-        return values[0];
+        if (repoUri != null) {
+            String[] values = repoUri.split("/");
+            String value = values[values.length - 1];
+            values = value.split("\\.");
+            return values[0];
+        }
+        return null;
     }
 
     public String getProcessId() {
@@ -69,6 +74,14 @@ public class Data {
             return "v";
         }
         return _verbosity.toLowerCase();
+    }
+
+    public String getProjectFolder() {
+        return _projectFolder;
+    }
+
+    public void setProjectFolder(String folder) {
+        _projectFolder = folder;
     }
 
     private <T> T getCommandValue(List<Object> payload, String key, boolean required){

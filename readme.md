@@ -103,7 +103,7 @@ The results can be obtained by inspecting the mongo database. [Robo 3T](https://
 
 The payload needs to be in YAML format, and contain two main elements namely **command** and **vars**, as shown in the following example:
 
-```YAML
+```yaml
 ---
 - command:
     repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
