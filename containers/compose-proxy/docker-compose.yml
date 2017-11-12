@@ -1,0 +1,25 @@
+version: '3'
+services:
+  proxy:
+    image: "prometeo-auth:0.0.1-0"
+    environment:
+      - HTTP_PORT=8081
+      - USER_PASSWORD=${PROXY_USER_PWD}
+      - DESTINATION_URL=${PROXY_URL}
+    links:
+      - web
+  web:
+    image: "prometeo:0.0.1-0"
+    environment:
+     - HTTP_PORT=8080
+     - LOG_DB_HOST=log
+     - LOG_DB_PORT=27017
+     - LOG_DB_NAME=prometeo
+    ports:
+     - "8080:8080"
+    links:
+     - log
+  log:
+    image: "mongo"
+    ports:
+     - "27017:27017"
