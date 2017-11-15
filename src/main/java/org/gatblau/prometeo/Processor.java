@@ -14,14 +14,16 @@ public class Processor implements Runnable {
     private LogManager _log;
     private Command _cmd;
     private String _processId;
+    private String _runAs;
     private List<Object> _payload;
     private String _workDir;
 
-    public Processor(String processId, List<Object> payload, Command cmd, LogManager log, String workDir) {
+    public Processor(String processId, String runAs, List<Object> payload, Command cmd, LogManager log, String workDir) {
         _cmd = cmd;
         _log = log;
         _payload = payload;
         _processId = processId;
+        _runAs = runAs;
         _workDir = workDir;
     }
 
@@ -110,6 +112,8 @@ public class Processor implements Runnable {
                 "-i",
                 String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
                 String.format("-%s", data.getVerbosity()),
+                "-u",
+                _runAs,
                 "--extra-vars",
                 data.getVars()
             };
@@ -122,6 +126,8 @@ public class Processor implements Runnable {
                 String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
                 String.format("-%s", data.getVerbosity()),
                 "--check",
+                "-u",
+                _runAs,
                 "--extra-vars",
                 data.getVars()
             };

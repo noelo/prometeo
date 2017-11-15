@@ -27,6 +27,9 @@ public class PrometeoWebAPI {
     @Value("${WORK_DIR:/prometeo}")
     private String _workDir;
 
+    @Value("${RUN_AS:prometeo}")
+    private String _runAs;
+
     @ApiOperation(value = "Returns OK if the service is up and running.", notes = "Use it as a readiness probe for the service.", response = String.class)
     @RequestMapping(value = "/", method = RequestMethod.GET, produces = "text/html")
     public String index() {
@@ -37,7 +40,7 @@ public class PrometeoWebAPI {
     @RequestMapping(path = "/run", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
-        _executor.execute(new Processor(processId, payload, _cmd, _log, _workDir));
+        _executor.execute(new Processor(processId, _runAs, payload, _cmd, _log, _workDir));
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 
@@ -45,7 +48,7 @@ public class PrometeoWebAPI {
     @RequestMapping(path = "/run/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> runSync(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
-        new Processor(processId, payload, _cmd, _log, _workDir).run();
+        new Processor(processId, _runAs, payload, _cmd, _log, _workDir).run();
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 
