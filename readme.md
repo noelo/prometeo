@@ -190,6 +190,7 @@ The prometeo docker image can be configured by changing the following environmen
 | QUEUE_CAPACITY | Set the capacity for the ThreadPoolExecutor's BlockingQueue. | 500 |
 | HTTP_PROXY | The URI of the HTTP Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used.  | Empty |
 | HTTPS_PROXY | The URI of the HTTPS Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used. | Empty |
+| RUN_AS | The name of the user prometeo uses to run the Ansible process. | prometeo |
 
 <a name="dev_mode"></a>
 ## Developer Mode [(up)](#toc)
