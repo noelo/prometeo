@@ -7,6 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -71,5 +76,23 @@ public class PrometeoWebAPI {
     public ResponseEntity<String> peek(@RequestBody List<Object> payload) throws InterruptedException {
         Data data = new Data("", payload);
         return ResponseEntity.ok(String.format("ansible-playbook site.yml -i inventory -%s --extra-vars %s", data.getVerbosity(), data.getVars()));
+    }
+
+    @ApiOperation(value = "Gets the public key used by Prometeo to connect to a managed host.", notes = "Use to retrieve the public key required to configure managed hosts to accept incoming connections.")
+    @RequestMapping(path = "/pubkey", method = RequestMethod.GET, produces = "text/html")
+    public ResponseEntity<String> pubkey() throws InterruptedException {
+        String path = "/prometeo/id_rsa.pub";
+        File pubkey = new File(path);
+        if (pubkey.exists()) {
+            StringBuilder builder = new StringBuilder();
+            try (BufferedReader r = Files.newBufferedReader(pubkey.toPath(), Charset.defaultCharset())){
+                r.lines().forEach(builder::append);
+            }
+            catch (IOException ioex) {
+                throw new RuntimeException(String.format("Failed to retrieve public key: %s", ioex.getMessage()));
+            }
+            return ResponseEntity.ok(builder.toString());
+        }
+        return ResponseEntity.notFound().build();
     }
 }
