@@ -17,6 +17,7 @@ public class Data {
     private String _verbosity;
     private String _check;
     private String _projectFolder;
+    private String _runAs;
 
     public Data(String processId, List<Object> payload){
         _processId = processId;
@@ -29,6 +30,7 @@ public class Data {
         _verbosity= getCommandValue(payload, "verbosity");
         _check = getCommandValue(payload, "checkMode");
         _projectFolder = getCommandValue(payload, "folder");
+        _runAs = getCommandValue(payload, "runAs");
     }
 
     private String getRepoName(String repoUri) {
@@ -126,6 +128,14 @@ public class Data {
 
     public boolean checkMode() {
         return (_check != null && _check.toLowerCase().trim().equals("yes"));
+    }
+
+    public String getRunAs() {
+        return _runAs;
+    }
+
+    public void setRunAs(String runAs) {
+        _runAs = runAs;
     }
 }
 

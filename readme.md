@@ -17,6 +17,7 @@ It exposes a Web API based on Spring Boot accepting a YAML payload and logs the 
 - [Web API documentation](#web_api_doc)
 - [Ansible Project format](#project_format)
 - [Configuration Variables](#config_vars)
+- [SSH Keys](#ssh_keys)
 - [Developer Mode](#dev_mode)
 
 <a name="started_scripts"></a>
@@ -131,7 +132,8 @@ The **command** element contains information used by Prometeo to retrieve and ex
 | verbosity  | The level of verbosity of the Ansible execution output that is recorded in the Log database. The verbosity can be v, vv, vvv or vvvv. The default value is v. | no  |   
 | checkMode | When 'yes' it will not make any changes on remote systems. Instead, any module instrumented to support ‘check mode’ will report what changes they would have made rather than making them. | no |
 | callbackUri  | The URI Prometeo will call back when the process complete. No callback is performed if this value is not provided. | no  |  
-| project  | The unique reference identifying the project associated with the request. | yes  |    
+| project  | The unique reference identifying the project associated with the request. | yes  |  
+| runAs | The user under which Prometeo executes Ansible playbooks. This variable overrides the value defined in the environment variable **RUN_AS**. | no |  
 
 The **vars** element contains all the configuration variables required by the executing Ansible playbook.
 
@@ -191,6 +193,13 @@ The prometeo docker image can be configured by changing the following environmen
 | HTTP_PROXY | The URI of the HTTP Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used.  | Empty |
 | HTTPS_PROXY | The URI of the HTTPS Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used. | Empty |
 | RUN_AS | The name of the user prometeo uses to run the Ansible process. | prometeo |
+
+<a name="ssh_keys"></a>
+## SSH Keys [(up)](#toc)
+
+Prometeo uses a private RSA key to connect to managed hosts, therefore managed hosts need to have Prometeo's public key in order to accept connections.
+
+To facilitate obtaining the public key over HTTP Prometeo exposes its RSA public key via the "**/pubkey**" RESTful resource.
 
 <a name="dev_mode"></a>
 ## Developer Mode [(up)](#toc)

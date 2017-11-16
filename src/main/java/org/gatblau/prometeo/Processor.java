@@ -113,7 +113,7 @@ public class Processor implements Runnable {
                 String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
                 String.format("-%s", data.getVerbosity()),
                 "-u",
-                _runAs,
+                (data.getRunAs() != null) ? data.getRunAs() : _runAs,
                 "--extra-vars",
                 data.getVars()
             };
@@ -127,7 +127,7 @@ public class Processor implements Runnable {
                 String.format("-%s", data.getVerbosity()),
                 "--check",
                 "-u",
-                _runAs,
+                (data.getRunAs() != null) ? data.getRunAs() : _runAs,
                 "--extra-vars",
                 data.getVars()
             };
