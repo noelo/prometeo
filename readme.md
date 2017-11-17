@@ -84,7 +84,7 @@ If you have windows on your PC, the easiest way to get started is to follow the 
 To test the control node, a payload needs to be posted to the Web API to the **/run** URL. An application such as [Postman](https://www.getpostman.com/) can be used to post the payload.
 
 The parameters for the request are:
-- **URI**: http://localhost:8080/run
+- **URI**: http://localhost:8080/run/cfg
 - **Method**: POST
 - **Content-Type header**: "application/x-yaml"
 - **Body format**: RAW (with content as per the example below)
@@ -92,7 +92,7 @@ The parameters for the request are:
 or using the curl command for example as follows:
 
 ```bash
-$ curl -v -H "Content-Type: application/x-yaml" --data-binary "@src/test/resources/payload.yml" "http://localhost:8080/run"
+$ curl -v -H "Content-Type: application/x-yaml" --data-binary "@src/test/resources/payload.yml" "http://localhost:8080/run/cfg"
 ```
 
 The service responds immediately (as it executes asynchronously) passing back a global unique identifier that can be used to query the state of the process later.

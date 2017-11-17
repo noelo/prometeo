@@ -42,7 +42,7 @@ public class PrometeoWebAPI {
     }
 
     @ApiOperation(value = "Request the execution of an Ansible playbook in an asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched.")
-    @RequestMapping(path = "/run", method = RequestMethod.POST, consumes = "application/x-yaml")
+    @RequestMapping(path = "/run/cfg", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
         _executor.execute(new Processor(processId, _runAs, payload, _cmd, _log, _workDir));
@@ -50,7 +50,7 @@ public class PrometeoWebAPI {
     }
 
     @ApiOperation(value = "Request the execution of an Ansible playbook in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns a GUID for the process that has been launched after the whole process has completed.")
-    @RequestMapping(path = "/run/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
+    @RequestMapping(path = "/run/cfg/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
     public ResponseEntity<String> runSync(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
         new Processor(processId, _runAs, payload, _cmd, _log, _workDir).run();
