@@ -1,4 +1,4 @@
-Feature: Request Execution
+Feature: Execute configuration
   As an API user
   I want to request the execution of an automation job for a runner process
   So that the required deployment can be delegated to the runner for execution

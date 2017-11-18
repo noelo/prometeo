@@ -43,17 +43,33 @@ public class PrometeoWebAPI {
 
     @ApiOperation(value = "Request the execution of an Ansible playbook in an asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched.")
     @RequestMapping(path = "/run/cfg", method = RequestMethod.POST, consumes = "application/x-yaml")
-    public ResponseEntity<String> run(@RequestBody List<Object> payload) throws InterruptedException {
+    public ResponseEntity<String> runCfg(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
-        _executor.execute(new Processor(processId, _runAs, payload, _cmd, _log, _workDir));
+        _executor.execute(new Processor(processId, _runAs, payload, _cmd, _log, _workDir, false));
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 
     @ApiOperation(value = "Request the execution of an Ansible playbook in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns a GUID for the process that has been launched after the whole process has completed.")
     @RequestMapping(path = "/run/cfg/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
-    public ResponseEntity<String> runSync(@RequestBody List<Object> payload) throws InterruptedException {
+    public ResponseEntity<String> runCfgSync(@RequestBody List<Object> payload) throws InterruptedException {
         String processId = UUID.randomUUID().toString();
-        new Processor(processId, _runAs, payload, _cmd, _log, _workDir).run();
+        new Processor(processId, _runAs, payload, _cmd, _log, _workDir, false).run();
+        return ResponseEntity.ok(String.format("ProcessId: %s", processId));
+    }
+
+    @ApiOperation(value = "Request the execution of a single Ansible role in an asynchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns immediately with a GUID for the process that has been launched.")
+    @RequestMapping(path = "/run/role", method = RequestMethod.POST, consumes = "application/x-yaml")
+    public ResponseEntity<String> runRole(@RequestBody List<Object> payload) throws InterruptedException {
+        String processId = UUID.randomUUID().toString();
+        _executor.execute(new Processor(processId, _runAs, payload, _cmd, _log, _workDir, true));
+        return ResponseEntity.ok(String.format("ProcessId: %s", processId));
+    }
+
+    @ApiOperation(value = "Request the execution of a single Ansible role in a synchronous way.", notes = "Pass a YAML payload with command information and playbook variables. The request returns a GUID for the process that has been launched after the whole process has completed.")
+    @RequestMapping(path = "/run/role/sync", method = RequestMethod.POST, consumes = "application/x-yaml")
+    public ResponseEntity<String> runRoleSync(@RequestBody List<Object> payload) throws InterruptedException {
+        String processId = UUID.randomUUID().toString();
+        new Processor(processId, _runAs, payload, _cmd, _log, _workDir, true).run();
         return ResponseEntity.ok(String.format("ProcessId: %s", processId));
     }
 

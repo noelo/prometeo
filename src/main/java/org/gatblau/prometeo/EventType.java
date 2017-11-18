@@ -12,6 +12,7 @@ public enum EventType {
     CONFIG,
     CALLBACK,
     START_DEV_PROCESS,
+    INVALID_PAYLOAD,
 }
 
 

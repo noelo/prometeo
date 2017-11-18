@@ -6,6 +6,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,50 +21,64 @@ public class Processor implements Runnable {
     private String _runAs;
     private List<Object> _payload;
     private String _workDir;
+    private boolean _runSingleRoleOnly;
 
-    public Processor(String processId, String runAs, List<Object> payload, Command cmd, LogManager log, String workDir) {
+    public Processor(String processId, String runAs, List<Object> payload, Command cmd, LogManager log, String workDir, boolean runSingleRoleOnly) {
         _cmd = cmd;
         _log = log;
         _payload = payload;
         _processId = processId;
         _runAs = runAs;
         _workDir = workDir;
+        _runSingleRoleOnly = runSingleRoleOnly;
     }
 
     @Override
     public void run() {
-        if (devMode()){
-            runDevMode();
+        if (devMode()) {
+            runInDevMode(_runSingleRoleOnly);
         }
         else {
-            runProdMode();
+            runInProdMode(_runSingleRoleOnly);
         }
     }
 
-    private void runProdMode(){
+    private void runInProdMode(boolean singleRoleOnly) {
         try {
-            Data data = new Data(_processId, _payload);
+            Data data = getData();
+            if (data == null) return;
             _log.start(data);
             _log.payload(data);
 
             RunResult result = run(data, getGitCloneCmd(data), EventType.DOWNLOAD_SCRIPTS);
-            checkContinue(data, result);
+            if (shouldHaltProcess(data, result)) return;
 
             if (data.hasTag()){
-                result = run(data, getGitCheckoutTagCmd(data), EventType.CHECKOUT_TAG);
-                checkContinue(data, result);
+                if (singleRoleOnly) {
+                    result = run(data, getGitCheckoutTagCmd(data, "/roles"), EventType.CHECKOUT_TAG);
+                }
+                else {
+                    result = run(data, getGitCheckoutTagCmd(data, ""), EventType.CHECKOUT_TAG);
+                }
+                if (shouldHaltProcess(data, result)) return;
             }
 
-            result = run(data, getAnsibleSetupCmd(data), EventType.SETUP_ANSIBLE);
-            checkContinue(data, result);
+            if (singleRoleOnly) {
+                // no requirements.yml and site.yml programmatically created
+                createSiteFile(data);
+            }
+            else {
+                // process requirements.yml
+                result = run(data, getAnsibleSetupCmd(data), EventType.SETUP_ANSIBLE);
+            }
 
             result = run(data, getAnsibleRunCmd(data), EventType.RUN_ANSIBLE);
-            checkContinue(data, result);
+            if (shouldHaltProcess(data, result)) return;
 
             doCallback(data, null);
 
             result = run(data, getCleanupCmd(data), EventType.REMOVE_WORKDIR);
-            checkContinue(data, result);
+            if (shouldHaltProcess(data, result)) return;
 
             _log.shutdown(data);
         }
@@ -69,16 +87,68 @@ public class Processor implements Runnable {
         }
     }
 
-    private void runDevMode(){
-        Data data = new Data(_processId, _payload);
-        _log.startDevMode(data);
-        _log.payload(data);
+    private Data getData() {
+        Data data;
+        try {
+            data = new Data(_processId, _payload);
+        }
+        catch (Exception e) {
+            _log.invalidPayload(_processId, arrayToString(_payload), e.getMessage());
+            return null;
+        }
+        return data;
+    }
 
-        checkContinue(data, run(data, getAnsibleDevModeRunCmd(data), EventType.RUN_ANSIBLE));
+    private String arrayToString(List<Object> payload) {
+        StringBuilder b = new StringBuilder();
+        for(Object item: payload){
+            b.append(item);
+        }
+        return b.toString();
+    }
 
-        doCallback(data, null);
+    private void createSiteFile(Data data) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/role_playbook.yml")));
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
 
-        _log.shutdown(data);
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            String site = String.format(sb.toString(), data.getHostPattern(), data.getRoleRepoName());
+            FileOutputStream out = new FileOutputStream(String.format(_workDir + "/%2$s_%1$s/site.yml", data.getProcessId(), data.getRoleRepoName()));
+            out.write(site.getBytes());
+            out.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            br.close();
+        }
+    }
+
+    private void runInDevMode(boolean singleRoleOnly){
+        try {
+            Data data = getData();
+            if (data == null) return;
+            _log.start(data);
+            _log.payload(data);
+
+            RunResult result = run(data, getAnsibleDevModeRunCmd(data), EventType.RUN_ANSIBLE);
+            if (shouldHaltProcess(data, result)) return;
+
+            result = run(data, getCleanupCmd(data), EventType.REMOVE_WORKDIR);
+            if (shouldHaltProcess(data, result)) return;
+
+            _log.shutdown(data);
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     private RunResult run(Data data, String[] cmd, EventType eventType) {
@@ -105,59 +175,52 @@ public class Processor implements Runnable {
     }
 
     private String[] getAnsibleRunCmd(Data data) {
-        if (!data.checkMode()) {
-            return new String[] {
-                "ansible-playbook",
-                String.format("./%2$s_%1$s/site.yml", data.getProcessId(), data.getRepoName()),
-                "-i",
-                String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
-                String.format("-%s", data.getVerbosity()),
-                "-u",
-                (data.getRunAs() != null) ? data.getRunAs() : _runAs,
-                "--extra-vars",
-                data.getVars()
-            };
+        String inventory = data.getInventory();
+        if (inventory.equals("hosts")) {
+            inventory = data.getHostPattern();
         }
         else {
-            return new String[] {
-                "ansible-playbook",
-                String.format("./%2$s_%1$s/site.yml", data.getProcessId(), data.getRepoName()),
-                "-i",
-                String.format("./%2$s_%1$s/inventory", data.getProcessId(), data.getRepoName()),
-                String.format("-%s", data.getVerbosity()),
-                "--check",
-                "-u",
-                (data.getRunAs() != null) ? data.getRunAs() : _runAs,
-                "--extra-vars",
-                data.getVars()
-            };
+            inventory = "inventory";
         }
+        ArrayList<String> list = new ArrayList<>();
+        list.add("ansible-playbook");
+        String repoName = (data.getCfgRepoUri() != null) ? data.getCfgRepoName() : data.getRoleRepoName();
+        list.add(String.format("./%2$s_%1$s/site.yml", data.getProcessId(), repoName));
+        if (!data.getInventory().trim().toLowerCase().equals("none")) {
+            list.add("-i");
+            if (data.getInventory().trim().toLowerCase().equals("hosts")) {
+                list.add(String.format("%s", data.getHostPattern()));
+            }
+            else {
+                list.add(String.format("./%2$s_%1$s/%3$s", data.getProcessId(), data.getCfgRepoName(), inventory));
+            }
+        }
+        list.add(String.format("-%s", data.getVerbosity()));
+        if  (data.checkMode()) {
+            list.add("--check");
+        }
+        list.add("-u");
+        list.add((data.getRunAs() != null) ? data.getRunAs() : _runAs);
+        list.add("--extra-vars");
+        list.add(data.getVars());
+
+        return list.toArray(new String[list.size()-1]);
     }
 
     private String[] getAnsibleDevModeRunCmd(Data data) {
-        if (!data.checkMode()) {
-            return new String[] {
-                "ansible-playbook",
-                String.format("./%1$s/site.yml", data.getProjectFolder()),
-                "-i",
-                String.format("./%1$s/inventory", data.getProjectFolder()),
-                String.format("-%s", data.getVerbosity()),
-                "--extra-vars",
-                data.getVars()
-            };
+        ArrayList<String> list = new ArrayList<>();
+        list.add("ansible-playbook");
+        list.add(String.format("./%1$s/site.yml", data.getProjectFolder()));
+        list.add("-i");
+        list.add(String.format("./%1$s/inventory", data.getProjectFolder()));
+        list.add(String.format("-%s", data.getVerbosity()));
+        if  (data.checkMode()) {
+            list.add("--check");
         }
-        else {
-            return new String[] {
-                "ansible-playbook",
-                String.format("./%1$s/site.yml", data.getProjectFolder()),
-                "-i",
-                String.format("./%1$s/inventory", data.getProjectFolder()),
-                String.format("-%s", data.getVerbosity()),
-                "--check",
-                "--extra-vars",
-                data.getVars()
-            };
-        }
+        list.add("--extra-vars");
+        list.add(data.getVars());
+
+        return list.toArray(new String[list.size()-1]);
     }
 
     private String[] getAnsibleSetupCmd(Data data) {
@@ -165,24 +228,30 @@ public class Processor implements Runnable {
             "ansible-galaxy",
             "install",
             "-r",
-            String.format("./%2$s_%1$s/requirements.yml", data.getProcessId(), data.getRepoName()),
-            String.format("--roles-path=./%2$s_%1$s/roles", data.getProcessId(), data.getRepoName())
+            String.format("./%2$s_%1$s/requirements.yml", data.getProcessId(), data.getCfgRepoName()),
+            String.format("--roles-path=./%2$s_%1$s/roles", data.getProcessId(), data.getCfgRepoName())
         };
     }
 
     private String[] getGitCloneCmd(Data data) {
-        return new String[]{
-            "git",
-            "clone",
-            data.getRepoUri(),
-            String.format("./%2$s_%1$s", data.getProcessId(), data.getRepoName())
-        };
+        ArrayList<String> list = new ArrayList<>();
+        list.add("git");
+        list.add("clone");
+        if (data.getCfgRepoUri() != null) {
+            list.add(data.getCfgRepoUri());
+            list.add(String.format("./%2$s_%1$s", data.getProcessId(), data.getCfgRepoName()));
+        }
+        else {
+            list.add(data.getRoleRepoUri());
+            list.add(String.format("./%2$s_%1$s/roles/%2$s", data.getProcessId(), data.getRoleRepoName()));
+        }
+        return list.toArray(new String[list.size()-1]);
     }
 
-    private String[] getGitCheckoutTagCmd(Data data) {
+    private String[] getGitCheckoutTagCmd(Data data, String rolesPath) {
         return new String[] {
             "cd",
-            String.format("./%2$s_%1$s", data.getProcessId(), data.getRepoName()),
+            String.format("./%2$s_%1$s%3$s", data.getProcessId(), data.getCfgRepoName(), rolesPath),
             "&&",
             "git",
             "checkout",
@@ -194,7 +263,7 @@ public class Processor implements Runnable {
          return new String[]{
              "rm",
              "-rf",
-             String.format("./%2$s_%1$s", data.getProcessId(), data.getRepoName())
+             String.format("./%2$s_%1$s", data.getProcessId(), data.getCfgRepoName())
          };
     }
 
@@ -231,7 +300,7 @@ public class Processor implements Runnable {
                     payload.put("result", error);
                 }
                 payload.put("processId", data.getProcessId());
-                payload.put("repoUri", data.getRepoUri());
+                payload.put("repoUri", data.getCfgRepoUri());
                 payload.put("tag", data.getTag());
                 ResponseEntity<String> response = client.postForEntity(data.getCallbackUri(), getEntity(payload), String.class);
                 if (response.getStatusCodeValue() == 200) {
@@ -251,18 +320,11 @@ public class Processor implements Runnable {
         }
     }
 
-    private boolean callbackIfFailed(Data data, RunResult result) {
+    private boolean shouldHaltProcess(Data data, RunResult result) {
         if (!result.success) {
             doCallback(data, result.error);
             return true;
         }
         return false;
-    }
-
-    private void checkContinue(Data data, RunResult result) {
-        if (callbackIfFailed(data, result)) {
-            _log.shutdown(data);
-            return;
-        }
     }
 }

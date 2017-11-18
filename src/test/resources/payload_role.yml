@@ -1,11 +1,13 @@
 ---
 - command:
-    cfgRepoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
+    roleRepoUri: "https://github.com/prometeo-cloud/prometeo_role_test"
     tag: ""
     verbosity: "vvv"
     checkMode: "no"
     project: "PO123"
     runAs: "prometeo"
+    inventory: "hosts"
+    hostPattern: "localhost"
 - vars:
     test_url: "http://repo1.maven.org/maven2/io/swagger/swagger-core/1.5.9/swagger-core-1.5.9.pom"
     test_dictionary:

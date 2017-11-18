@@ -8,32 +8,62 @@ import java.util.Map;
 
 public class Data {
     private String _processId;
-    private String _repoUri;
+    private String _cfgRepoUri;
+    private String _roleRepoUri;
     private String _tag;
     private String _callbackUri;
     private String _project;
-    private String _repoName;
+    private String _cfgRepoName;
+    private String _roleRepoName;
     private String _vars;
     private String _verbosity;
     private String _check;
-    private String _projectFolder;
+    private String _folder;
     private String _runAs;
+    private String _hostPattern;
+    private String _inventory;
 
-    public Data(String processId, List<Object> payload){
+    public Data(String processId, List<Object> payload) {
         _processId = processId;
-        _repoUri = getCommandValue(payload, "repoUri", System.getenv("WORK_DIR") != null);
+        _cfgRepoUri = getCommandValue(payload, "cfgRepoUri");
+        _roleRepoUri = getCommandValue(payload, "roleRepoUri");
         _tag = getCommandValue(payload, "tag");
         _callbackUri = getCommandValue(payload, "callbackUri");
-        _project = getCommandValue(payload, "project", System.getenv("WORK_DIR") != null);
-        _repoName = getRepoName(_repoUri);
+        _project = getCommandValue(payload, "project");
+        _cfgRepoName = getCfgRepoName(_cfgRepoUri);
+        _roleRepoName = getCfgRepoName(_roleRepoUri);
         _vars = toJSON(getVars(payload));
         _verbosity= getCommandValue(payload, "verbosity");
         _check = getCommandValue(payload, "checkMode");
-        _projectFolder = getCommandValue(payload, "folder");
+        _folder = getCommandValue(payload, "folder",System.getenv("WORK_DIR") != null);
         _runAs = getCommandValue(payload, "runAs");
+        _hostPattern = getCommandValue(payload, "hostPattern", _roleRepoUri != null && !_roleRepoUri.isEmpty());
+        _inventory = getCommandValue(payload, "inventory");  // none, local-file, hosts, remote-file (not implemented yet)
+
+        // if not in dev mode
+        if (_folder == null || _folder.isEmpty()) {
+            // requires repo URI to be defined
+            if ((_cfgRepoUri == null || _cfgRepoUri.isEmpty()) && (_roleRepoUri == null || _roleRepoUri.isEmpty())) {
+                throw new RuntimeException(String.format("Invalid Payload: at least one repository URI (of the form cfgRepoUri or roleRepoUri) must be defined in the payload."));
+            }
+            if ((_cfgRepoUri != null) && (_roleRepoUri != null)) {
+                throw new RuntimeException(String.format("Invalid Payload: conflicting cfgRepoUri and roleRepoUri defined. Only one value must be defined in the payload."));
+            }
+            if (_roleRepoUri != null && (!getInventory().equals("hosts") || _hostPattern == null)) {
+                throw new RuntimeException(String.format("Invalid Payload: 'hostPattern' and 'inventory' option set to 'hosts' are required when specifying 'roleRepoUri'."));
+            }
+        }
+
+        if (getInventory().equals("hosts") && _hostPattern == null) {
+            throw new RuntimeException(String.format("Invalid Payload: 'hostPattern' is required when 'inventory' option is set to 'hosts'."));
+        }
+
+        if (!(getInventory().equals("none") || getInventory().equals("local-file") || getInventory().equals("hosts"))) {
+            throw new RuntimeException(String.format("Invalid Payload: 'inventory' option is invalid - valid values are: none, local-file, hosts."));
+        }
     }
 
-    private String getRepoName(String repoUri) {
+    private String getCfgRepoName(String repoUri) {
         if (repoUri != null) {
             String[] values = repoUri.split("/");
             String value = values[values.length - 1];
@@ -47,8 +77,12 @@ public class Data {
         return _processId;
     }
 
-    public String getRepoUri() {
-        return _repoUri;
+    public String getCfgRepoUri() {
+        return _cfgRepoUri;
+    }
+
+    public String getRoleRepoUri() {
+        return _roleRepoUri;
     }
 
     public String getTag() {
@@ -63,8 +97,12 @@ public class Data {
         return _project;
     }
 
-    public String getRepoName() {
-        return _repoName;
+    public String getCfgRepoName() {
+        return _cfgRepoName;
+    }
+
+    public String getRoleRepoName() {
+        return _roleRepoName;
     }
 
     public String getVars() {
@@ -79,11 +117,11 @@ public class Data {
     }
 
     public String getProjectFolder() {
-        return _projectFolder;
+        return _folder;
     }
 
     public void setProjectFolder(String folder) {
-        _projectFolder = folder;
+        _folder = folder;
     }
 
     private <T> T getCommandValue(List<Object> payload, String key, boolean required){
@@ -136,6 +174,14 @@ public class Data {
 
     public void setRunAs(String runAs) {
         _runAs = runAs;
+    }
+
+    public String getHostPattern() {
+        return _hostPattern;
+    }
+
+    public String getInventory() {
+        return (_inventory == null || _inventory.isEmpty()) ? "local-file" : _inventory;
     }
 }
 

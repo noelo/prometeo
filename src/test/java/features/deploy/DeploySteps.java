@@ -3,6 +3,7 @@ package features.deploy;
 import cucumber.api.PendingException;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
+import cucumber.api.java.en.When;
 import features.IntegrationTest;
 import features.Vars;
 import org.gatblau.prometeo.PrometeoWebAPI;
@@ -25,18 +26,7 @@ public class DeploySteps extends IntegrationTest {
 
     @And("^the execution of the deployment configuration is requested$")
     public void the_execution_of_the_deployment_configuration_is_requested() throws Throwable {
-        assertThat(controller).isNotNull();
-
-        String payload = util.get(Vars.KEY_CONFIG_PAYLOAY);
-
-        ResponseEntity<String> response = client.postForEntity(
-                "http://localhost:" + port + "/run/cfg/sync",
-                util.getEntity(payload),
-                String.class);
-
-        assertThat(response.getStatusCodeValue() == 200);
-
-        util.put(Vars.KEY_PROCESS_ID, response.getBody().replace("ProcessId: ", ""));
+        executePayload("/run/cfg/sync");
     }
 
     @And("^the deployment process has been launched$")
@@ -60,5 +50,31 @@ public class DeploySteps extends IntegrationTest {
     public void thePayloadForDevModeIsWellDefined() throws Throwable {
         String payload = util.getFile("payload_dev.yml");
         util.put(Vars.KEY_CONFIG_PAYLOAY, payload);
+    }
+
+    @Given("^the payload for single role execution is defined$")
+    public void thePayloadForSingleRoleExecutionIsDefined() throws Throwable {
+        String payload = util.getFile("payload_role.yml");
+        util.put(Vars.KEY_CONFIG_PAYLOAY, payload);
+    }
+
+    @When("^the execution of the role is requested$")
+    public void theExecutionOfTheRoleIsRequested() throws Throwable {
+        executePayload("/run/role/sync");
+    }
+
+    private void executePayload(String resoursePath) {
+        assertThat(controller).isNotNull();
+
+        String payload = util.get(Vars.KEY_CONFIG_PAYLOAY);
+
+        ResponseEntity<String> response = client.postForEntity(
+                "http://localhost:" + port + resoursePath,
+                util.getEntity(payload),
+                String.class);
+
+        assertThat(response.getStatusCodeValue() == 200);
+
+        util.put(Vars.KEY_PROCESS_ID, response.getBody().replace("ProcessId: ", ""));
     }
 }

@@ -97,4 +97,8 @@ public class LogManager {
         }
         return thisLog != null;
     }
+
+    public void invalidPayload(String processId, String payload, String message) {
+        insert(new Event(processId, "", EventType.INVALID_PAYLOAD, payload, false, message));
+    }
 }
