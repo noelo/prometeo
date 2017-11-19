@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class Command {
@@ -14,6 +16,9 @@ public class Command {
     @Value("${HTTPS_PROXY:_}")
     private String _httpsProxy;
 
+    @Value("${NO_PROXY:_}")
+    private String _noProxy;
+
     private Runtime _runtime;
 
     public Command() {
@@ -23,7 +28,7 @@ public class Command {
     public Result execute(String[] command, String workingDir){
         Result result= new Result();
         try {
-            String[] envp = getEnvParams(_httpProxy, _httpsProxy);
+            String[] envp = getEnvParams(_httpProxy, _httpsProxy, _noProxy);
             Process process = _runtime.exec(command, envp, new File(workingDir));
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -50,20 +55,21 @@ public class Command {
      * Returns null if the proxies have not been set.
      * @param httpProxy
      * @param httpsProxy
+     * @param noProxy
      * @return array of String
      */
-    private String[] getEnvParams(String httpProxy, String httpsProxy) {
-        if (!httpProxy.equals("_") && !httpsProxy.equals("_")){
-            // http and https proxies are set
-            return new String[]{ String.format("http_proxy=%s", httpProxy), String.format("https_proxy=%s", httpsProxy) };
-        } else if (!httpProxy.equals("_") && httpsProxy.equals("_")) {
-            // only http proxy is set
-            return new String[] { String.format("http_proxy=%s", httpProxy) };
-        } else if (httpProxy.equals("_") && !httpsProxy.equals("_")) {
-            // only https proxy is set
-            return new String[]{ String.format("https_proxy=%s", httpsProxy) };
+    private String[] getEnvParams(String httpProxy, String httpsProxy, String noProxy) {
+        List<String> list = new ArrayList<String>();
+        if (!httpProxy.equals("_")) {
+            list.add(String.format("http_proxy=%s", httpProxy));
         }
-        return null;
+        if (!httpsProxy.equals("_")) {
+            list.add(String.format("https_proxy=%s", httpsProxy));
+        }
+        if (!noProxy.equals("_")) {
+            list.add(String.format("no_proxy=%s", noProxy));
+        }
+        return (list.size() > 0) ? list.toArray(new String[list.size()-1]) : null;
     }
 
     public class Result {
