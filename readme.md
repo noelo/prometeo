@@ -194,7 +194,7 @@ The following payload is appropriate when testing in [developer mode](#dev_mode)
 **Note**: *Developer Mode* allows to execute configurations or roles via the Prometeo API pointing to the local file system instead of cloning remote repositories.
 
 <a name="cmd_vars"></a>
-### Command Variables [(up)](#†oc)
+### Command Variables [(up)](#toc)
 
 The **command** section of the payload contains information used by Prometeo to retrieve and execute an Ansible playbook.
 
