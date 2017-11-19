@@ -12,7 +12,10 @@ It exposes a Web API based on Spring Boot accepting a YAML payload and logs the 
 - [Getting Started using build scripts](#started_scripts)
 - [Getting Started using Europa](#started_europa)
 - [Testing the control node](#testing_ctrl_node)
-- [Payload format](#payload_format)
+- [Executing a Configuration Repository](#exec_cfg_repo)
+- [Executing a Role Repository](#exec_role_repo)
+- [Executing in Developer Mode](#dev_mode)
+- [Command Variables](#cmd_vars)
 - [Querying process status](#proc_status)
 - [Web API documentation](#web_api_doc)
 - [Ansible Project format](#project_format)
@@ -81,10 +84,14 @@ If you have windows on your PC, the easiest way to get started is to follow the 
 <a name="testing_ctrl_node"></a>
 ## Testing the control node [(up)](#toc)
 
-To test the control node, a payload needs to be posted to the Web API to the **/run** URL. An application such as [Postman](https://www.getpostman.com/) can be used to post the payload.
+To test the control node, a payload needs to be posted to the Web API to:
+- **/cfg/run** to execute a configuration repository; or
+- **/role/run** to execute a single role repository.
 
-The parameters for the request are:
-- **URI**: http://localhost:8080/run/cfg
+An application such as [Postman](https://www.getpostman.com/), [cURL](https://curl.haxx.se/) or the Prometeo Swagger user interface (e.g. http://prometeo-host/swagger-ui.html) can be used to post the payload.
+
+The parameters for a raw HTTP request are:
+- **URI**: http://localhost:8080/run/cfg or http://localhost:8080/run/role
 - **Method**: POST
 - **Content-Type header**: "application/x-yaml"
 - **Body format**: RAW (with content as per the example below)
@@ -99,16 +106,26 @@ The service responds immediately (as it executes asynchronously) passing back a 
 
 The results can be obtained by inspecting the mongo database. [Robo 3T](https://robomongo.org/) can be used to query Mongo with a connection **localhost:27017**.
 
-<a name="payload_format"></a>
-### Payload format [(up)](#toc)
+There are also synchronous endpoints as follows:
+- **/run/cfg/sync**
+- **/run/role/cync**
 
-The payload needs to be in YAML format, and contain two main elements namely **command** and **vars**, as shown in the following example:
+**NOTE**: More information about all available endpoints can be found by inspecting the Swagger user interface.
+
+<a name="exec_cfg_repo"></a>
+### Executing a Configuration Repository [(up)](#toc)
+
+The payload needs to be in YAML format, and contain two main sections namely **command** and **vars**. The **command** section is restricted to the variables that Prometeo understands, whereas the **vars** section is open and any variables in YAML format can be passed as required by the ansible configuration repository or role repository respectively.
+
+The payload to execute an Ansible [configuration repository](https://github.com/prometeo-cloud/prometeo_cfg_test) is shown in the following example:
 
 ```yaml
 ---
 - command:
     repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
     tag: ""
+    inventory: "local-file"
+    runAs: "prometeo"
     verbosity: "vvv"
     checkMode: "no"
     callbackUri: "https://myapp/callme/"
@@ -122,18 +139,69 @@ The payload needs to be in YAML format, and contain two main elements namely **c
 ...
 ```
 
-The **command** element contains information used by Prometeo to retrieve and execute an Ansible playbook.
+<a name="exec_role_repo"></a>
+### Executing a Role Repository [(up)](#toc)
+
+The payload to execute an Ansible [role repository](https://github.com/prometeo-cloud/prometeo_role_test) is shown in the following example:
+
+```yaml
+---
+- command:
+    repoUri: "https://github.com/prometeo-cloud/prometeo_role_test"
+    tag: ""
+    inventory: "hosts"
+    hostPattern: "localhost"
+    runAs: "prometeo"
+    verbosity: "vvv"
+    checkMode: "no"
+    callbackUri: "https://myapp/callme/"
+    project: "PO123"
+- vars:
+    test_url: "http://repo1.maven.org/maven2/io/swagger/swagger-core/1.5.9/swagger-core-1.5.9.pom"
+    test_dictionary:
+        name: "Martin"
+        job: "Elite Developer"
+        skill: "Elite"
+...
+```
+<a name="exec_dev_mode"></a>
+### Executing in Developer Mode [(up)](#toc)
+
+The following payload is appropriate when testing in [developer mode](#dev_mode):
+
+```yaml
+---
+- command:
+    folder: "prometeo_cfg_test"
+    verbosity: "vvvv"
+    checkMode: "no"
+- vars:
+    test_url: "http://repo1.maven.org/maven2/io/swagger/swagger-core/1.5.9/swagger-core-1.5.9.pom"
+    test_dictionary:
+        name: "Martin"
+        job: "Elite Developer"
+        skill: "Elite"
+...
+```
+<a name="cmd_vars"></a>
+### Command Variables [(up)](#†oc)
+
+The **command** section of the payload contains information used by Prometeo to retrieve and execute an Ansible playbook.
+
+The various configuration options are as follows:
 
 
 | Variable  | Description  | Mandatory  |  
 |---|---|---|
-| repoUri  | The URI of the git repository containing the Ansible scripts to run.  | yes  |  
-| tag  | The tag in the git repository to use or empty if the master is used.  | no  |   
-| verbosity  | The level of verbosity of the Ansible execution output that is recorded in the Log database. The verbosity can be v, vv, vvv or vvvv. The default value is v. | no  |   
-| checkMode | When 'yes' it will not make any changes on remote systems. Instead, any module instrumented to support ‘check mode’ will report what changes they would have made rather than making them. | no |
-| callbackUri  | The URI Prometeo will call back when the process complete. No callback is performed if this value is not provided. | no  |  
-| project  | The unique reference identifying the project associated with the request. | yes  |  
-| runAs | The user under which Prometeo executes Ansible playbooks. This variable overrides the value defined in the environment variable **RUN_AS**. | no |  
+| **repoUri**  | The URI of the git repository containing the Ansible scripts to run.  | yes  |  
+| **tag**  | The tag in the git repository to use or empty if the master is used.  | no  |   
+| **verbosity**  | The level of verbosity of the Ansible execution output that is recorded in the Log database. The verbosity can be v, vv, vvv or vvvv. The default value is v. | no  |   
+| **checkMode** | When 'yes' it will not make any changes on remote systems. Instead, any module instrumented to support ‘check mode’ will report what changes they would have made rather than making them. | no |
+| **callbackUri**  | The URI Prometeo will call back when the process complete. No callback is performed if this value is not provided. | no  |  
+| **project**  | The unique reference identifying the project associated with the request. | yes  |  
+| **runAs** | The user under which Prometeo executes Ansible playbooks. This variable overrides the value defined in the environment variable **RUN_AS**. | no |  
+| **inventory** | Specifies the action to take with regard to the inventory file. The options are: **none** (no inventory file is used when executing the Ansible command); **local-file** (the inventory file in the configuration project is used); **hosts** (a host pattern is passed to the Ansible command, defined by the *hostPattern* command attribute); **remote-file** (an inventory stored in a remote git repository is used - this is not implemented yet). If not value is passed, the default value is **local-file**. | no  |
+| **hostPattern** | Specifies which hosts to manage when **inventory** is set to **hosts**. What hosts to apply a particular configuration or IT process to. For more information see [here](http://docs.ansible.com/ansible/latest/intro_patterns.html).| only if **inventory** is set to **hosts**. |
 
 The **vars** element contains all the configuration variables required by the executing Ansible playbook.
 
@@ -174,8 +242,8 @@ To see the API documentation in JSON format go to http://localhost:8080/v2/api-d
 Prometeo makes explicit assumptions about the format of the Ansible projects that runs.
 
 Two types of git repositories are required:
-- **Configuration Repository**: it contains a playbook, an inventory and a requirements file. The purpose of this repository is to glue together a series of roles to execute the required automation. See the [prometeo_cfg_test](https://github.com/prometeo-cloud/prometeo_cfg_test) repository for an example. This is the repository specified in the **repoUri** variable in the payload. Prometeo clones this repository and executes ansible-galxy using the requirements.yml file to pull any roles used by the playbook.
-- **Role Repository**: it contains an Ansible role. Variables are automatically passed by Prometeo to the role. See the [prometeo_role_test](https://github.com/prometeo-cloud/prometeo_role_test) for an example of a role repository.
+- **Configuration Repository**: it contains a playbook, an inventory and a requirements file. The purpose of this repository is to glue together a series of roles to execute the required automation. See the [prometeo_cfg_test](https://github.com/prometeo-cloud/prometeo_cfg_test) repository for an example. This is the repository specified in the **cfgRepoUri** variable in the payload. Prometeo clones this repository and executes ansible-galaxy using the requirements.yml file to pull any roles used by the playbook.
+- **Role Repository**: it contains an Ansible role. Variables are automatically passed by Prometeo to the role. See the [prometeo_role_test](https://github.com/prometeo-cloud/prometeo_role_test) for an example of a role repository. A role repository can be execute using the **roleRepoUri** variable.
 
 <a name="config_vars"></a>
 ## Configuration Variables [(up)](#toc)
@@ -192,6 +260,7 @@ The prometeo docker image can be configured by changing the following environmen
 | QUEUE_CAPACITY | Set the capacity for the ThreadPoolExecutor's BlockingQueue. | 500 |
 | HTTP_PROXY | The URI of the HTTP Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used.  | Empty |
 | HTTPS_PROXY | The URI of the HTTPS Proxy to use by Prometeo to access Internet resources. If not set, no proxy is used. | Empty |
+| NO_PROXY | The URLs that should be excluded from proxying (on servers that should be contacted directly). | Empty |
 | RUN_AS | The name of the user prometeo uses to run the Ansible process. | prometeo |
 
 <a name="ssh_keys"></a>
