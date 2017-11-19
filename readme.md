@@ -14,7 +14,7 @@ It exposes a Web API based on Spring Boot accepting a YAML payload and logs the 
 - [Testing the control node](#testing_ctrl_node)
 - [Executing a Configuration Repository](#exec_cfg_repo)
 - [Executing a Role Repository](#exec_role_repo)
-- [Executing in Developer Mode](#dev_mode)
+- [Executing in Developer Mode](#exec_dev_mode)
 - [Command Variables](#cmd_vars)
 - [Querying process status](#proc_status)
 - [Web API documentation](#web_api_doc)
