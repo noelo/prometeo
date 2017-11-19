@@ -122,7 +122,7 @@ The payload to execute an Ansible [configuration repository](https://github.com/
 ```yaml
 ---
 - command:
-    repoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
+    cfgRepoUri: "https://github.com/prometeo-cloud/prometeo_cfg_test"
     tag: ""
     inventory: "local-file"
     runAs: "prometeo"
@@ -138,6 +138,9 @@ The payload to execute an Ansible [configuration repository](https://github.com/
         skill: "Elite"
 ...
 ```
+**Note**: Prometeo executes a *Configuration Repository* when it finds the **cfgRepoUri** variable in the payload.
+
+ A *Configuration Repository* is a repository containing a playbook which calls one or more Ansible roles in other repositories whose location is specified in a *requirements.yml* file.
 
 <a name="exec_role_repo"></a>
 ### Executing a Role Repository [(up)](#toc)
@@ -147,7 +150,7 @@ The payload to execute an Ansible [role repository](https://github.com/prometeo-
 ```yaml
 ---
 - command:
-    repoUri: "https://github.com/prometeo-cloud/prometeo_role_test"
+    roleRepoUri: "https://github.com/prometeo-cloud/prometeo_role_test"
     tag: ""
     inventory: "hosts"
     hostPattern: "localhost"
@@ -164,6 +167,11 @@ The payload to execute an Ansible [role repository](https://github.com/prometeo-
         skill: "Elite"
 ...
 ```
+
+**Note**: Prometeo executes a *Role Repository* when it finds the **roleRepoUri** variable in the payload.
+
+ A *Role Repository* is a repository containing a single Ansible role. Prometeo creates a *site.yml* on the fly to execute that single role, passing host pattern and role name information.
+
 <a name="exec_dev_mode"></a>
 ### Executing in Developer Mode [(up)](#toc)
 
@@ -183,6 +191,8 @@ The following payload is appropriate when testing in [developer mode](#dev_mode)
         skill: "Elite"
 ...
 ```
+**Note**: *Developer Mode* allows to execute configurations or roles via the Prometeo API pointing to the local file system instead of cloning remote repositories.
+
 <a name="cmd_vars"></a>
 ### Command Variables [(up)](#†oc)
 
@@ -274,7 +284,7 @@ To facilitate obtaining the public key over HTTP Prometeo exposes its RSA public
 ## Developer Mode [(up)](#toc)
 
 Prometeo can run in developer mode to facilitate testing playbooks in the local machine.
-Developer mode runs outside of Docker and can be invoked by executing the Prometeo jar file from the command line passing the WORK_DIR environment variable pointing to the location of the folder where the playbook projects are contained.
+Developer mode runs outside of a Docker container and can be invoked by executing the Prometeo jar file from the command line passing the **WORK_DIR** environment variable pointing to the location of the folder where the playbook projects are contained.
 
 For example:
 
@@ -287,9 +297,15 @@ to create the prometeo jar file execute the *package* goal in maven:
 $ mvn package
 ```
 
+Additionally, an instance of a MongoDb database is required by Prometeo to record execution logs, which can be launched as follows:
+
+```bash
+$ docker run mongo
+```
+
 In developer mode Prometeo does not perform the following operations:
-- clone the ansible project repo
-- create a process specific folder for the cloned repo
+- clone the Ansible Configuration Repository
+- create a process specific folder for the cloned repository
 - install roles from the requirements.yml file
 - delete the process specific folder
 
