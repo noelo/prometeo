@@ -1,6 +1,5 @@
 ## Commands to build and deploy
 
-
 ### Base JRE Image
 ```
 oc new-build https://github.com/noelo/prometeo-docker --context-dir=jre8  --to=prometeojre --strategy=docker --name=prometejre8
@@ -52,3 +51,15 @@ oc create secret generic sshkey --from-file=id_rsa=../.ssh/id_rsa
 ```
 oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh --secret-name='sshkey' --default-mode='0600'
 ```
+
+## Create MongoDB instance
+```
+oc process -n openshift mongodb-persistent | oc create -f-
+```
+
+## Mount the MongoDB secret into the pod
+```
+oc volume dc/prometeoapp --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret
+```
+
+
