@@ -49,7 +49,7 @@ oc create secret generic sshkey --from-file=id_rsa=../.ssh/id_rsa
 
 ### Mount the secret into the pod
 ```
-oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh --secret-name='sshkey' --default-mode='0600'
+oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh/keys --secret-name='sshkey' --default-mode='0600'
 ```
 
 ## Create MongoDB instance

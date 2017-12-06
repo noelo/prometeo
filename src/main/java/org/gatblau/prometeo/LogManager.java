@@ -2,7 +2,7 @@ package org.gatblau.prometeo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,16 +10,9 @@ import java.util.List;
 
 @Component
 public class LogManager {
+
+    @Autowired
     private Log thisLog;
-
-    @Value("${LOG_DB_NAME:prometeo}")
-    private String _dbName;
-
-    @Value("${LOG_DB_HOST:localhost}")
-    private String _dbHost;
-
-    @Value("${LOG_DB_PORT:27017}")
-    private String _dbPort;
 
     private ObjectMapper _mapper = new ObjectMapper(new YAMLFactory());
 
@@ -52,8 +45,7 @@ public class LogManager {
         try {
             String payload = _mapper.writeValueAsString(data);
             insert(new Event(data.getProcessId(), data.getProject(), EventType.CONFIG, payload));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             insert(new Event(data.getProcessId(), data.getProject(), EventType.ERROR, ex.getMessage()));
         }
     }
@@ -85,17 +77,17 @@ public class LogManager {
     }
 
     private boolean canAccessLog(String processId) {
-        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
-        if (thisLog == null) {
-            Log newLog = new Log(_dbName, _dbHost, _dbPort);
-            if (newLog.connected()) {
-                thisLog = newLog;
-            }
-            else {
-                System.out.println(String.format(queryFailed, "Connection timeout."));
-            }
-        }
-        return thisLog != null;
+//        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
+//        if (thisLog == null) {
+//            Log newLog = new Log();
+//            if (newLog.connected()) {
+//                thisLog = newLog;
+//            } else {
+//                System.out.println(String.format(queryFailed, "Connection timeout."));
+//            }
+//        }
+//        return thisLog != null;
+        return thisLog.checkDB();
     }
 
     public void invalidPayload(String processId, String payload, String message) {
