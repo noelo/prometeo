@@ -10,9 +10,6 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -35,40 +32,19 @@ public class Log {
     @Autowired
     private DBConfig dbConfig;
 
-    private MongoClient _mongo;
     private MongoDatabase _db;
     private boolean _connected = false;
     private MongoCollection<Event> _events;
 
-    @Value("${database-user:missing}")
-    private String _username;
-
-    @Value("${database-password:missing}")
-    private String _password;
-
-    @Value("${database-name:prometeo}")
-    private String _dbName;
-
-    @Value("${database-admin-password:missing}")
-    private String _adminpwd;
-
-    @Value("${dbhostname:mongodb}")
-    private String _dbHost;
-
-    @Value("${dbhostport:27017}")
-    private String _dbPort;
-
-
-    public boolean checkDB(){
+    public boolean checkDB() {
         try {
-            if (_db == null){
-                _db = getDb(_dbName, _dbHost, Integer.parseInt(_dbPort));
+            if (_db == null) {
+                _db = getDb(dbConfig.getDatabaseName(), dbConfig.getHostname(), dbConfig.getPort());
             }
             _events = _db.getCollection("events", Event.class);
             _connected = true;
-        }
-        catch (Exception ex) {
-            System.out.println("Unable to access database "+ex.getMessage());
+        } catch (Exception ex) {
+            System.out.println("Unable to access database " + ex.getMessage());
             ex.printStackTrace();
             _db = null;
             _connected = false;
@@ -81,28 +57,27 @@ public class Log {
         return _connected;
     }
 
-    public MongoCredential mongoCredential() {
+    private MongoCredential mongoCredential() {
         return MongoCredential.createCredential(
-                _username,
-                _dbName,
-                _password.toCharArray());
+                dbConfig.getUsername(),
+                dbConfig.getDatabaseName(),
+                dbConfig.getPassword().toCharArray());
     }
 
 
     private MongoDatabase getDb(String dbName, String host, int port) {
+        MongoClient _mongo;
         CodecRegistry pojoCodecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-        _mongo = new MongoClient(new ServerAddress(host, port), Arrays.asList(mongoCredential()),MongoClientOptions.builder().codecRegistry(pojoCodecRegistry).build());
+        _mongo = new MongoClient(new ServerAddress(host, port), Arrays.asList(mongoCredential()), MongoClientOptions.builder().codecRegistry(pojoCodecRegistry).build());
         return _mongo.getDatabase(dbName);
     }
 
 
-
-    public void insertEvent(Event event){
+    public void insertEvent(Event event) {
         String insertFailed = String.format("Connection to Log database failed: '%s'. Could not insert '%s' event.", "%s", event.getEventType().toString());
         try {
             _events.insertOne(event);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             System.out.println(String.format(insertFailed, ex.getMessage()));
         }
     }

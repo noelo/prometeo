@@ -77,16 +77,6 @@ public class LogManager {
     }
 
     private boolean canAccessLog(String processId) {
-//        String queryFailed = String.format("Connection to Log database failed: '%s'. Could not query log for process Id ='%s'.", "%s", processId);
-//        if (thisLog == null) {
-//            Log newLog = new Log();
-//            if (newLog.connected()) {
-//                thisLog = newLog;
-//            } else {
-//                System.out.println(String.format(queryFailed, "Connection timeout."));
-//            }
-//        }
-//        return thisLog != null;
         return thisLog.checkDB();
     }
 
