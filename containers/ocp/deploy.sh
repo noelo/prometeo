@@ -30,8 +30,6 @@ oc project prometeo-dev --token=$TOKEN
 # create a persistent jenkins
 oc process -n openshift jenkins-persistent --token=$TOKEN | oc create -f- -n prometeo-dev --token=$TOKEN
 
-# updates the bc to add repo URLs
-oc patch bc prometeo-web-pipeline -p '{"spec":{"strategy":{"jenkinsPipelineStrategy":{"env": [{"name":"APP_GIT_URL","value":"https://github.com/prometeo-cloud/prometeo_web"}]}}}}' --token=$TOKEN
 
 # Build Configurations
 # ====================
@@ -47,6 +45,9 @@ oc new-build  -i prometeo --binary=true --to=prometeoapp --strategy=source --tok
 
 # create a build configuration for the jenkins pipeline to build prometeo_web from source
 oc new-build --env="APP_GIT_URL=https://github.com/prometeo-cloud/prometeo_web.git" https://github.com/prometeo-cloud/prometeo_web --strategy=pipeline --name=prometeo-web-pipeline --token=$TOKEN
+
+# updates the bc to add repo URLs
+oc patch bc prometeo-web-pipeline -p '{"spec":{"strategy":{"jenkinsPipelineStrategy":{"env": [{"name":"APP_GIT_URL","value":"https://github.com/prometeo-cloud/prometeo_web"}]}}}}' --token=$TOKEN
 
 # create a build configuration for the jenkins pipeline to build prometeo from source
 oc new-build --env="API_GIT_URL=https://github.com/prometeo-cloud/prometeo.git" https://github.com/prometeo-cloud/prometeo --strategy=pipeline --name=prometeo-pipeline --token=$TOKEN
