@@ -63,7 +63,7 @@ oc set triggers bc/prometeo --from-image=myproject/prometeojre:latest --token=$T
 # =======
 
 # create a persistent mongodb instance from a template
-oc process -n openshift mongodb-persistent | oc create -f- --token=$TOKEN
+oc process -n openshift mongodb-persistent --token=$TOKEN | oc create -f- --token=$TOKEN
 
 # Prometeo
 # ============
