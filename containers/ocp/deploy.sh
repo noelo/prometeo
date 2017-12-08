@@ -77,7 +77,7 @@ oc volume dc/prometeoapp --add -t secret -m /tmp/secrets --secret-name=mongodb -
 ssh-keygen -f id_rsa -N ''
 
 # create secret for the key
-oc create secret generic sshkey --from-file=id_rsa=../.ssh/id_rsa
+oc create secret generic sshkey --from-file=id_rsa=../.ssh/id_rsa --token=$TOKEN
 
 # mount the secret
 oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh/keys --secret-name='sshkey' --default-mode='0600' --token=$TOKEN
