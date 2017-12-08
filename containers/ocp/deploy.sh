@@ -31,7 +31,7 @@ oc project prometeo-dev --token=$TOKEN
 oc process -n openshift jenkins-persistent --token=$TOKEN | oc create -f- -n prometeo-dev --token=$TOKEN
 
 # updates the bc to add repo URLs
-oc patch bc prometeo-web-pipeline -p '{"spec":{"strategy":{"jenkinsPipelineStrategy":{"env": [{"name":"APP_GIT_URL","value":"https://github.com/prometeo-cloud/prometeo_web"}]}}}}'
+oc patch bc prometeo-web-pipeline -p '{"spec":{"strategy":{"jenkinsPipelineStrategy":{"env": [{"name":"APP_GIT_URL","value":"https://github.com/prometeo-cloud/prometeo_web"}]}}}}' --token=$TOKEN
 
 # Build Configurations
 # ====================
@@ -80,7 +80,7 @@ ssh-keygen -f id_rsa -N ''
 oc create secret generic sshkey --from-file=id_rsa=../.ssh/id_rsa
 
 # mount the secret
-oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh/keys --secret-name='sshkey' --default-mode='0600'
+oc volume dc/prometeoapp --add -t secret -m /prometeo/.ssh/keys --secret-name='sshkey' --default-mode='0600' --token=$TOKEN
 
 
 # Prometeo-Web
