@@ -108,7 +108,7 @@ oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' -
 
 echo 'Creating a build for the Web Application'
 
-oc new-build  -i java --binary=true --to=prometeoweb --strategy=source --token=$TOKEN
+oc new-build -i java --binary=true --to=prometeoweb --strategy=source --token=$TOKEN
 
 echo 'Cloning the application repository'
 
@@ -124,7 +124,7 @@ oc start-build prometeoweb --from-file=./prometeo_web/target/prometeo_web-0.0.1-
 
 echo 'Creating the prometeo application'
 
-oc new-app prometeo-dev/prometeoweb:latest -e "ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-myproject.$CLUSTER_IP.nip.io" --token=$TOKEN
+oc new-app prometeoweb:latest -e "ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io" --token=$TOKEN
 
 echo 'Exposing the service with a route'
 
