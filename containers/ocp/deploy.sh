@@ -17,19 +17,20 @@ API_AUTH_HEADER='test'
 # CD Pipeline Projects
 # ====================
 
-#oc new-project prometeo-demo --token=$TOKEN
-#oc new-project prometeo-test --token=$TOKEN
-oc new-project prometeo-dev --token=$TOKEN
+#oc new-project $DEMO_PROJECT_NAME --token=$TOKEN
+#oc new-project $DEMO_PROJECT_NAME --token=$TOKEN
+#oc new-project $TEST_PROJECT_NAME --token=$TOKEN
+oc new-project $DEV_PROJECT_NAME --token=$TOKEN
 
 # set the project to DEV
-oc project prometeo-dev --token=$TOKEN
+oc project $DEV_PROJECT_NAME --token=$TOKEN
 
 # Jenkins
 # =======
 
 # create a persistent jenkins
-#oc process -n openshift jenkins-persistent --token=$TOKEN | oc create -f- -n prometeo-dev --token=$TOKEN
-oc process -n openshift jenkins-ephemeral --token=$TOKEN | oc create -f- -n prometeo-dev --token=$TOKEN
+#oc process -n openshift jenkins-persistent --token=$TOKEN | oc create -f- -n $DEV_PROJECT_NAME --token=$TOKEN
+oc process -n openshift jenkins-ephemeral --token=$TOKEN | oc create -f- -n $DEV_PROJECT_NAME --token=$TOKEN
 
 
 # Build Configurations
