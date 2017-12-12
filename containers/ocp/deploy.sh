@@ -84,7 +84,7 @@ oc start-build prometeo --from-file=./prometeo/target/prometeo-0.0.1-SNAPSHOT.ja
 
 echo 'Creating the prometeo application'
 
-oc new-app prometeo-dev/prometeo:latest --token=$TOKEN
+oc new-app prometeo:latest --token=$TOKEN
 
 echo 'Mounting the mongodb secret into the prometeo pod'
 
