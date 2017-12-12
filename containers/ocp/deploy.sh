@@ -124,7 +124,11 @@ oc start-build prometeoweb --from-file=./prometeo_web/target/prometeo_web-0.0.1-
 
 echo 'Creating the prometeo application'
 
-oc new-app prometeoweb:latest -e "ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io" --token=$TOKEN
+oc new-app prometeoweb:latest --token=$TOKEN
+
+echo 'Updating environment variables'
+
+oc env dc/prometeoweb ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io
 
 echo 'Exposing the service with a route'
 
