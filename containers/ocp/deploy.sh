@@ -128,7 +128,7 @@ oc new-app prometeoweb:latest --token=$TOKEN
 
 echo 'Updating environment variables'
 
-oc env dc/prometeoweb ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io
+oc env dc/prometeoweb ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io
 
 echo 'Exposing the service with a route'
 
