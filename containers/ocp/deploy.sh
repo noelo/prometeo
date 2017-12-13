@@ -86,6 +86,12 @@ echo 'Creating the prometeo application'
 
 oc new-app prometeo:latest --token=$TOKEN
 
+echo 'please wait...'
+
+while [ $(oc get svc prometeo | grep -c 8080) -eq "0" ]; do
+    sleep 1;
+done
+
 echo 'Mounting the mongodb secret into the prometeo pod'
 
 oc volume dc/prometeo --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret --token=$TOKEN
@@ -101,6 +107,10 @@ oc create secret generic sshkey --from-file=id_rsa --token=$TOKEN
 echo 'Mounting the secret as a persistent volume'
 
 oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600' --token=$TOKEN
+
+echo 'Exposing the service with a route'
+
+oc expose svc prometeo --token=$TOKEN
 
 
 # Prometeo-Web
@@ -126,9 +136,13 @@ echo 'Creating the prometeo application'
 
 oc new-app prometeoweb:latest --token=$TOKEN
 
+while [ $(oc get svc prometeoweb | grep -c 8080) -eq "0" ]; do
+    sleep 1;
+done
+
 echo 'Updating environment variables'
 
-oc env dc/prometeoweb ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io
+oc env dc/prometeoweb ADMIN_PASSWORD=test PROMETEO_AUTHORIZATION=test PROMETEO_URL=http://prometeo-$DEV_PROJECT_NAME.$CLUSTER_IP.nip.io
 
 echo 'Exposing the service with a route'
 
