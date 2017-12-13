@@ -82,15 +82,15 @@ echo 'Starting a new build with the application jar file'
 
 oc start-build prometeo --from-file=./prometeo/target/prometeo-0.0.1-SNAPSHOT.jar --follow --token=$TOKEN
 
+echo 'please wait...'
+sleep 10
+
 echo 'Creating the prometeo application'
 
 oc new-app prometeo:latest --token=$TOKEN
 
 echo 'please wait...'
-
-while [ $(oc get svc prometeo | grep -c 8080) -eq "0" ]; do
-    sleep 1;
-done
+sleep 10
 
 echo 'Mounting the mongodb secret into the prometeo pod'
 
@@ -132,13 +132,15 @@ echo 'Starting a new build with the application jar file'
 
 oc start-build prometeoweb --from-file=./prometeo_web/target/prometeo_web-0.0.1-SNAPSHOT.jar --follow --token=$TOKEN
 
+echo 'please wait...'
+sleep 10
+
 echo 'Creating the prometeo application'
 
 oc new-app prometeoweb:latest --token=$TOKEN
 
-while [ $(oc get svc prometeoweb | grep -c 8080) -eq "0" ]; do
-    sleep 1;
-done
+echo 'please wait...'
+sleep 10
 
 echo 'Updating environment variables'
 
