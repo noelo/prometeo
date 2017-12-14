@@ -52,13 +52,15 @@ while [ $(oc get is jansible | grep -c latest) -eq "0" ]; do
     sleep 1;
 done
 
-echo 'Linking the build of the ansible image if the parent changes'
+echo 'Linking the build of the Ansible image if the parent changes'
 
 oc set triggers bc/jansible --from-image=java:latest --token=$TOKEN
 
-echo 'Creting a build configuration to build the jar file'
+echo 'Creating a build configuration to build the jar file'
 
 oc new-build  -i jansible --binary=true --to=prometeo --strategy=source --token=$TOKEN
+
+read -p "Press enter to continue"
 
 # MongoDb
 # =======
@@ -82,19 +84,19 @@ echo 'Starting a new build with the application jar file'
 
 oc start-build prometeo --from-file=./prometeo/target/prometeo-0.0.1-SNAPSHOT.jar --follow --token=$TOKEN
 
-echo 'please wait...'
-sleep 10
+read -p "Press enter to continue"
 
 echo 'Creating the prometeo application'
 
 oc new-app prometeo:latest --token=$TOKEN
 
-echo 'please wait...'
-sleep 10
+read -p "Press enter to continue"
 
 echo 'Mounting the mongodb secret into the prometeo pod'
 
 oc volume dc/prometeo --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret --token=$TOKEN
+
+read -p "Press enter to continue"
 
 echo 'Generating SSH keys'
 
@@ -104,9 +106,13 @@ echo 'Creating a secret to store the key'
 
 oc create secret generic sshkey --from-file=id_rsa --token=$TOKEN
 
+read -p "Press enter to continue"
+
 echo 'Mounting the secret as a persistent volume'
 
 oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600' --token=$TOKEN
+
+read -p "Press enter to continue"
 
 echo 'Exposing the service with a route'
 
@@ -120,6 +126,8 @@ echo 'Creating a build for the Web Application'
 
 oc new-build -i java --binary=true --to=prometeoweb --strategy=source --token=$TOKEN
 
+read -p "Press enter to continue"
+
 echo 'Cloning the application repository'
 
 git clone https://github.com/prometeo-cloud/prometeo_web
@@ -132,15 +140,13 @@ echo 'Starting a new build with the application jar file'
 
 oc start-build prometeoweb --from-file=./prometeo_web/target/prometeo_web-0.0.1-SNAPSHOT.jar --follow --token=$TOKEN
 
-echo 'please wait...'
-sleep 10
+read -p "Press enter to continue"
 
 echo 'Creating the prometeo application'
 
 oc new-app prometeoweb:latest --token=$TOKEN
 
-echo 'please wait...'
-sleep 10
+read -p "Press enter to continue"
 
 echo 'Updating environment variables'
 
