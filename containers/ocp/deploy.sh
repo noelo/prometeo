@@ -101,6 +101,12 @@ oc start-build prometeo --from-file=./prometeo/target/prometeo-0.0.1-SNAPSHOT.ja
 
 read -p "Press enter to continue"
 
+out ${YELLOW} 'Granting the project service account view access to read secrets (spring-cloud)'
+
+oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
+
+read -p "Press enter to continue"
+
 out ${YELLOW} 'Creating the prometeo application'
 
 oc new-app prometeo:latest --token=$TOKEN
