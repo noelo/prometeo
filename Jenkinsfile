@@ -51,6 +51,33 @@ pipeline {
         }    
     }
 
+    stage('Create Image Builder') {
+      when {
+        expression {
+          openshift.withCluster() {
+            return !openshift.selector("bc", "prometeo").exists();
+          }
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
+          }
+        }
+      }
+    }
+
+    stage('Build Image') {
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+          }
+        }
+      }
+    }
+
     // stage("Openshift Image build"){
     //     steps {
     //         script{
