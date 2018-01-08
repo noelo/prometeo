@@ -26,6 +26,7 @@ pipeline {
     // }
 
     stage("Maven build") {
+        steps {
             // Get source code from repository
             // git "${params.APP_GIT_URL}"
 
@@ -40,29 +41,33 @@ pipeline {
             groupId = pom.groupId.replace(".", "/")
             packaging = pom.packaging
             NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"  
-            echo "Artifact = ${NEXUS_ARTIFACT_PATH}"       
+            echo "Artifact = ${NEXUS_ARTIFACT_PATH}"  
+        }     
     }
 
     stage("Openshift Image build"){
-        openshift.withCluster() {
-            def bc = created.narrow('bc')
-            echo "Starting binary build in project ${openshift.project()} for application ${NEXUS_ARTIFACT_PATH}"
-            openshift.withProject() {
-                def buildartifact="${artifactId}-${APP_VERSION}.${packaging}"
-                echo "Using file ${buildartifact} in build"
+        steps {
+            script{
+                openshift.withCluster() {
+                def bc = created.narrow('bc')
+                echo "Starting binary build in project ${openshift.project()} for application ${NEXUS_ARTIFACT_PATH}"
+                openshift.withProject() {
+                    def buildartifact="${artifactId}-${APP_VERSION}.${packaging}"
+                    echo "Using file ${buildartifact} in build"
 
-                def build = openshift.startBuild("prometeo", "--from-file=./target/${buildartifact}")
-                build.describe()
-                build.watch {
-                    return it.object().status.phase == "Complete"
-                }
-                def images = openshift.selector("imagestream")
-                images.withEach { // The closure body will be executed once for each selected object.
+                    def build = openshift.startBuild("prometeo", "--from-file=./target/${buildartifact}")
+                    build.describe()
+                    build.watch {
+                        return it.object().status.phase == "Complete"
+                    }
+                    def images = openshift.selector("imagestream")
+                    images.withEach { // The closure body will be executed once for each selected object.
         // The 'it' variable will be bound to a Selector which selects a single
         // object which is the focus of the iteration.
-                    echo "Images: ${it.name()} is defined in ${openshift.project()}"
+                        echo "Images: ${it.name()} is defined in ${openshift.project()}"
+                    }
                 }
-            }
+            }}
         }
     }
 }
