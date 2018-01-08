@@ -27,22 +27,24 @@ pipeline {
 
     stage("Maven build") {
         steps {
-            // Get source code from repository
-            // git "${params.APP_GIT_URL}"
+            script{
+                // Get source code from repository
+                // git "${params.APP_GIT_URL}"
 
-            // extract info from pom.xml
-            def pom = readMavenPom file: "pom.xml"
+                // extract info from pom.xml
+                def pom = readMavenPom file: "pom.xml"
 
-            sh "mvn clean package -DskipTests"   
+                sh "mvn clean package -DskipTests"   
  
-            // global variable
-            APP_VERSION = pom.version
-            artifactId = pom.artifactId
-            groupId = pom.groupId.replace(".", "/")
-            packaging = pom.packaging
-            NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"  
-            echo "Artifact = ${NEXUS_ARTIFACT_PATH}"  
-        }     
+                // global variable
+                APP_VERSION = pom.version
+                artifactId = pom.artifactId
+                groupId = pom.groupId.replace(".", "/")
+                packaging = pom.packaging
+                NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"  
+                echo "Artifact = ${NEXUS_ARTIFACT_PATH}"  
+            } 
+        }    
     }
 
     stage("Openshift Image build"){
