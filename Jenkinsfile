@@ -5,22 +5,6 @@ pipeline {
     // }
     stages {
 
-        stage("Maven build") {
-            agent { label 'maven' }
-            steps {
-                script {
-                        def pom = readMavenPom file: "pom.xml"
-                        sh "mvn clean package -DskipTests"
-                        APP_VERSION = pom.version
-                        artifactId = pom.artifactId
-                        groupId = pom.groupId.replace(".", "/")
-                        packaging = pom.packaging
-                        NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"
-                        echo "Artifact = ${NEXUS_ARTIFACT_PATH}"
-                    }
-                }
-        }
-        
         stage('Create Image Builder Prometeo') {
             when {
                 expression {
@@ -39,16 +23,37 @@ pipeline {
             }
         }
 
-        stage('Build Application Image') {
+        stage("Maven build") {
             agent { label 'maven' }
             steps {
                 script {
-                    openshift.withCluster() {
-                        openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+                        def pom = readMavenPom file: "pom.xml"
+                        sh "mvn clean package -DskipTests"
+                        APP_VERSION = pom.version
+                        artifactId = pom.artifactId
+                        groupId = pom.groupId.replace(".", "/")
+                        packaging = pom.packaging
+                        NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"
+                        echo "Building container image with artifact = ${NEXUS_ARTIFACT_PATH}"
+
+                        openshift.withCluster() {
+                            openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+                        }
                     }
                 }
-            }
         }
+        
+
+        // stage('Build Application Image') {
+        //     agent { label 'maven' }
+        //     steps {
+        //         script {
+        //             openshift.withCluster() {
+        //                 openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Dev Deployment') {
             agent any
