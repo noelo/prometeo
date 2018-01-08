@@ -1,14 +1,14 @@
 pipeline {
-    agent any
+    agent none
     // {
     //     label 'maven'
     // }
     stages {
 
         stage("Maven build") {
+            agent { label 'maven' }
             steps {
                 script {
-                    node("maven") {
                         def pom = readMavenPom file: "pom.xml"
                         sh "mvn clean package -DskipTests"
                         APP_VERSION = pom.version
@@ -19,9 +19,8 @@ pipeline {
                         echo "Artifact = ${NEXUS_ARTIFACT_PATH}"
                     }
                 }
-            }
         }
-
+        
         stage('Create Image Builder Prometeo') {
             when {
                 expression {
@@ -31,6 +30,7 @@ pipeline {
                 }
             }
             steps {
+                agent any 
                 script {
                     openshift.withCluster() {
                         openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
@@ -40,6 +40,7 @@ pipeline {
         }
 
         stage('Build Application Image') {
+            agent { label 'maven' }
             steps {
                 script {
                     openshift.withCluster() {
@@ -50,6 +51,7 @@ pipeline {
         }
 
         stage('Dev Deployment') {
+            agent any
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     input 'Do you approve deployment?'
@@ -58,6 +60,7 @@ pipeline {
         }
 
         stage('Promote to DEV') {
+            agent any
             steps {
                 script {
                 openshift.withCluster() {
