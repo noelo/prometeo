@@ -21,8 +21,8 @@ pipeline {
                     }
                 }
             }
-            steps {
-                agent any 
+            agent any
+            steps { 
                 script {
                     openshift.withCluster() {
                         openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
