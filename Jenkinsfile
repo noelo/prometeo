@@ -5,8 +5,8 @@ pipeline {
     // }
     stages {
         stage("Init"){
+            agent any
             steps{
-                agent any
                 script {
                     sh "oc version"
                 }
