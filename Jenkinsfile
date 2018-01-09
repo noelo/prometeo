@@ -85,6 +85,7 @@ pipeline {
         }
 
         stage('Create app if needed') {
+            agent any
             when {
                 expression {
                     openshift.withCluster() {
@@ -93,8 +94,7 @@ pipeline {
                 }
             }
             steps {
-                agent any 
-                script {
+                 script {
                     openshift.withCluster() {
                         openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc').expose()
                     }
@@ -105,8 +105,5 @@ pipeline {
                 }
             }
         }
-
-
-
     }
 }
