@@ -4,6 +4,14 @@ pipeline {
     //     label 'maven'
     // }
     stages {
+        stage("Init"){
+            steps{
+                agent any
+                script {
+                    sh "oc version"
+                }
+            }
+        }
 
         stage('Create Image Builder Prometeo') {
             when {
@@ -36,6 +44,7 @@ pipeline {
                         NEXUS_ARTIFACT_PATH = "${groupId}/${artifactId}/${APP_VERSION}/${artifactId}-${APP_VERSION}.${packaging}"
                         echo "Building container image with artifact = ${NEXUS_ARTIFACT_PATH}"
 
+                        // This is here until we get the Nexus repo setup
                         openshift.withCluster() {
                             openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
                         }
@@ -74,5 +83,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Create app if needed') {
+            when {
+                expression {
+                    openshift.withCluster() {
+                        return !openshift.selector("dc", "prometeo-dev").exists();
+                    }
+                }
+            }
+            steps {
+                agent any 
+                script {
+                    openshift.withCluster() {
+                        openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc').expose()
+                    }
+                    def saSelector = openshift.selector("dc", "prometeo-dev").volume()
+                    saSelector.withEach { 
+                        echo "Volume: ${it.name()} is defined in ${openshift.project()}"
+                    }
+                }
+            }
+        }
+
+
+
     }
 }
