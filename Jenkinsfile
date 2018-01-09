@@ -100,8 +100,8 @@ pipeline {
                     }
                     sleep 2
                     sh "oc set triggers dc/prometeo-dev --manual"
-                    sh "oc volume dc/prometeo --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
-                    sh "oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
+                    sh "oc volume dc/prometeo-dev --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
+                    sh "oc volume dc/prometeo-dev --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
                     sh "oc set triggers dc/prometeo-dev --auto"
                 }
             }
