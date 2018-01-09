@@ -84,7 +84,7 @@ pipeline {
             }
         }
 
-        stage('Create app if needed') {
+        stage('Create app if not already there') {
             agent any
             when {
                 expression {
@@ -98,10 +98,11 @@ pipeline {
                     openshift.withCluster() {
                         openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc').expose()
                     }
-                    def saSelector = openshift.selector("dc", "prometeo-dev").volume()
-                    saSelector.withEach { 
-                        echo "Volume: ${it.name()} is defined in ${openshift.project()}"
-                    }
+                    sleep(2,"SECONDS")
+                    sh "oc set triggers dc/prometeo-dev --manual"
+                    sh "oc volume dc/prometeo --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
+                    sh "oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
+                    sh "oc set triggers dc/prometeo-dev --auto"
                 }
             }
         }
