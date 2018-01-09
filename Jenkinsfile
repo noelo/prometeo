@@ -98,7 +98,7 @@ pipeline {
                     openshift.withCluster() {
                         openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc').expose()
                     }
-                    sleep(2,"SECONDS")
+                    sleep 2
                     sh "oc set triggers dc/prometeo-dev --manual"
                     sh "oc volume dc/prometeo --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
                     sh "oc volume dc/prometeo --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
