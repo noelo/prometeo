@@ -66,7 +66,7 @@ pipeline {
             agent any
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
-                    input 'Do you approve deployment?'
+                    input 'Do you approve deployment to development environment ?'
                 }
             }
         }
@@ -94,13 +94,17 @@ pipeline {
             steps {
                  script {
                     openshift.withCluster() {
-                        openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc').expose()
+                        openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc')
+                        openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--manual')
+                        openshift.raw('volume','deploymentconfig/prometeo-dev', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
+                        openshift.raw('volume','deploymentconfig/prometeo-dev', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
+                        openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--auto')
                     }
-                    sleep 2
-                    sh "oc set triggers dc/prometeo-dev --manual"
-                    sh "oc volume dc/prometeo-dev --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
-                    sh "oc volume dc/prometeo-dev --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
-                    sh "oc set triggers dc/prometeo-dev --auto"
+                    // sleep 2
+                    // sh "oc set triggers deploymentconfig/prometeo-dev --manual"
+                    // sh "oc volume deploymentconfig/prometeo-dev --add -t secret -m /tmp/secrets --secret-name=mongodb --name=mongodb-secret"
+                    // sh "oc volume deploymentconfig/prometeo-dev --add -t secret -m /app/.ssh/keys --secret-name='sshkey' --default-mode='0600'"
+                    // sh "oc set triggers deploymentconfig/prometeo-dev --auto"
                 }
             }
         }
