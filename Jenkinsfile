@@ -1,8 +1,5 @@
 pipeline {
     agent none
-    // {
-    //     label 'maven'
-    // }
     stages {
         stage("Init"){
             agent any
