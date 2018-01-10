@@ -37,6 +37,7 @@ pipeline {
             agent { label 'maven' }
             steps {
                 script {
+                        checkout scm                    
                         def pom = readMavenPom file: "pom.xml"
                         sh "mvn clean package -DskipTests"
                         APP_VERSION = pom.version
