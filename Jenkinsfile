@@ -19,7 +19,9 @@ pipeline {
             when {
                 expression {
                     openshift.withCluster() {
-                        return !openshift.selector("bc", "prometeo").exists();
+                        openshift.withProject( 'prometeo-dev' ) {
+                            return !openshift.selector("bc", "prometeo").exists();
+                        }
                     }
                 }
             }
@@ -27,7 +29,9 @@ pipeline {
             steps { 
                 script {
                     openshift.withCluster() {
-                        openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
+                        openshift.withProject( 'prometeo-dev' ) {
+                            openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
+                        }
                     }
                 }
             }
@@ -49,7 +53,9 @@ pipeline {
 
                         // This is here until we get the Nexus repo setup
                         openshift.withCluster() {
-                            openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+                            openshift.withProject( 'prometeo-dev' ) {
+                                openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
+                            }
                         }
                     }
                 }
@@ -80,8 +86,10 @@ pipeline {
             agent any
             steps {
                 script {
-                openshift.withCluster() {
-                    openshift.tag("prometeo:latest", "prometeo:dev")
+                    openshift.withCluster() {
+                        openshift.withProject( 'prometeo-dev' ) {
+                            openshift.tag("prometeo:latest", "prometeo:dev")
+                        }
                     }
                 }
             }
@@ -92,21 +100,75 @@ pipeline {
             when {
                 expression {
                     openshift.withCluster() {
-                        return !openshift.selector("dc", "prometeo-dev").exists();
+                        openshift.withProject( 'prometeo-dev' ) {
+                            return !openshift.selector("dc", "prometeo-dev").exists();
+                        }
                     }
                 }
             }
             steps {
                  script {
                     openshift.withCluster() {
-                        openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc')
-                        openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--manual')
-                        openshift.raw('volume','deploymentconfig/prometeo-dev', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
-                        openshift.raw('volume','deploymentconfig/prometeo-dev', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
-                        openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--auto')
+                        openshift.withProject( 'prometeo-dev' ) {
+                            openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--manual')
+                            openshift.raw('volume','deploymentconfig/prometeo-dev', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
+                            openshift.raw('volume','deploymentconfig/prometeo-dev', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--auto')
+                        }
                     }
                 }
             }
         }
+
+        stage('Test Deployment') {
+            agent any
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    input 'Do you approve deployment to Test environment ?'
+                }
+            }
+        }
+
+        stage('Promote to TEST') {
+            agent any
+            steps {
+                script {
+                openshift.withCluster() {
+                        openshift.withProject( 'prometeo-dev' ) {
+                            openshift.tag("prometeo:dev", "prometeo:test")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Create app if not already there') {
+            agent any
+            when {
+                expression {
+                    openshift.withCluster() {
+                        openshift.withProject( 'prometeo-test' ) {
+                            return !openshift.selector("dc", "prometeo-test").exists();
+                        }
+                    }
+                }
+            }
+            steps {
+                 script {
+                    openshift.withCluster() {
+                        openshift.withProject( 'prometeo-test' ) {
+                            openshift.newApp("prometeo:test", "--name=prometeo-test").narrow('svc')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo-test', '--manual')
+                            openshift.raw('volume','deploymentconfig/prometeo-test', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
+                            openshift.raw('volume','deploymentconfig/prometeo-test', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo-test', '--auto')
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }
