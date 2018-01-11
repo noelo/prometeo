@@ -54,7 +54,6 @@ pipeline {
                         // This is here until we get the Nexus repo setup
                         openshift.withCluster() {
                             openshift.verbose()
-                            echo "Working in project ${openshift.project()} in cluster ${openshift.cluster()}"
                             openshift.withProject( 'prometeo-dev' ) {
                                 openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
                             }
@@ -160,7 +159,7 @@ pipeline {
                  script {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-test' ) {
-                            openshift.newApp("prometeo:test", "--name=prometeo-test").narrow('svc')
+                            openshift.newApp("prometeo-dev/prometeo:test", "--name=prometeo-test").narrow('svc')
                             openshift.raw('set','triggers','deploymentconfig/prometeo-test', '--manual')
                             openshift.raw('volume','deploymentconfig/prometeo-test', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
                             openshift.raw('volume','deploymentconfig/prometeo-test', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
