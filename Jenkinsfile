@@ -88,7 +88,7 @@ pipeline {
                 script {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
-                            openshift.tag("prometeo:latest", "prometeo:dev")
+                            openshift.tag("prometeo-dev/prometeo:latest", "prometeo-dev/prometeo:dev")
                         }
                     }
                 }
@@ -110,7 +110,7 @@ pipeline {
                  script {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
-                            openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc')
+                            openshift.newApp("prometeo:dev", "--name=prometeo").narrow('svc')
                             openshift.raw('set','triggers','deploymentconfig/prometeo', '--manual')
                             openshift.raw('volume','deploymentconfig/prometeo', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
                             openshift.raw('volume','deploymentconfig/prometeo', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
