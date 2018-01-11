@@ -95,7 +95,7 @@ pipeline {
             }
         }
 
-        stage('Create app if not already there') {
+        stage('Create app in DEV if not already there') {
             agent any
             when {
                 expression {
@@ -143,7 +143,7 @@ pipeline {
             }
         }
 
-        stage('Create app if not already there') {
+        stage('Create app in TEST if not already there') {
             agent any
             when {
                 expression {
