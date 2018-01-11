@@ -53,6 +53,8 @@ pipeline {
 
                         // This is here until we get the Nexus repo setup
                         openshift.withCluster() {
+                            openshift.verbose()
+                            echo "Working in project ${openshift.project()} in cluster ${openshift.cluster()}"
                             openshift.withProject( 'prometeo-dev' ) {
                                 openshift.selector("bc", "prometeo").startBuild("--from-file=target/${artifactId}-${APP_VERSION}.${packaging}", "--wait")
                             }
