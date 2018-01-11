@@ -101,7 +101,7 @@ pipeline {
                 expression {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
-                            return !openshift.selector("dc", "prometeo-dev").exists();
+                            return !openshift.selector("dc", "prometeo").exists();
                         }
                     }
                 }
@@ -111,10 +111,10 @@ pipeline {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
                             openshift.newApp("prometeo:dev", "--name=prometeo-dev").narrow('svc')
-                            openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--manual')
-                            openshift.raw('volume','deploymentconfig/prometeo-dev', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
-                            openshift.raw('volume','deploymentconfig/prometeo-dev', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
-                            openshift.raw('set','triggers','deploymentconfig/prometeo-dev', '--auto')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo', '--manual')
+                            openshift.raw('volume','deploymentconfig/prometeo', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
+                            openshift.raw('volume','deploymentconfig/prometeo', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo', '--auto')
                         }
                     }
                 }
@@ -136,7 +136,7 @@ pipeline {
                 script {
                 openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
-                            openshift.tag("prometeo:dev", "prometeo:test")
+                            openshift.tag("prometeo-dev/prometeo:dev", "prometeo-dev/prometeo:test")
                         }
                     }
                 }
@@ -149,7 +149,7 @@ pipeline {
                 expression {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-test' ) {
-                            return !openshift.selector("dc", "prometeo-test").exists();
+                            return !openshift.selector("dc", "prometeo").exists();
                         }
                     }
                 }
@@ -158,11 +158,11 @@ pipeline {
                  script {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-test' ) {
-                            openshift.newApp("prometeo-dev/prometeo:test", "--name=prometeo-test").narrow('svc')
-                            openshift.raw('set','triggers','deploymentconfig/prometeo-test', '--manual')
-                            openshift.raw('volume','deploymentconfig/prometeo-test', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
-                            openshift.raw('volume','deploymentconfig/prometeo-test', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
-                            openshift.raw('set','triggers','deploymentconfig/prometeo-test', '--auto')
+                            openshift.newApp("prometeo-dev/prometeo:test", "--name=prometeo").narrow('svc')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo', '--manual')
+                            openshift.raw('volume','deploymentconfig/prometeo', '--add','-t secret','-m /tmp/secrets --secret-name=mongodb --name=mongodb-secret')
+                            openshift.raw('volume','deploymentconfig/prometeo', '--add -t secret -m /app/.ssh/keys --secret-name=sshkey --default-mode=0600')
+                            openshift.raw('set','triggers','deploymentconfig/prometeo', '--auto')
                         }
                     }
                 }
