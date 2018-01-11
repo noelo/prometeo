@@ -30,7 +30,7 @@ pipeline {
                 script {
                     openshift.withCluster() {
                         openshift.withProject( 'prometeo-dev' ) {
-                            openshift.newBuild("--name=prometeo", "--image-stream=jansible:latest", "--binary")
+                            openshift.newBuild("--name=prometeo", "--image-stream=prometeo-dev/jansible:latest", "--binary")
                         }
                     }
                 }
